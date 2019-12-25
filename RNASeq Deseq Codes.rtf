@@ -1,0 +1,790 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1561\cocoasubrtf100
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 Monaco;}
+{\colortbl;\red255\green255\blue255;\red6\green0\blue135;\red62\green62\blue62;\red0\green0\blue0;
+\red181\green118\blue12;\red158\green0\blue3;\red11\green66\blue19;}
+{\*\expandedcolortbl;;\cssrgb\c2500\c8500\c60000;\cssrgb\c31200\c30900\c30900;\cssrgb\c0\c0\c0;
+\cssrgb\c76500\c53500\c3500;\cssrgb\c69000\c7500\c0;\cssrgb\c2000\c32000\c9500;}
+\margl1440\margr1440\vieww14460\viewh21140\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 ######################RNASeq data Deseq  (alpha + Beta Diversity + volcano plots) (Figure 2, supp Figure 8##############\
+\
+\
+\
+\
+\pard\tx528\tx1056\tx1584\tx2112\tx2640\tx3168\tx3696\tx4224\tx4752\tx5280\tx5808\tx6337\tx6865\tx7393\tx7921\tx8449\tx8977\tx9505\tx10033\tx10561\tx11089\tx11617\tx12145\tx12674\tx13202\tx13730\tx14258\tx14786\tx15314\tx15842\tx16370\tx16898\tx17426\tx17954\tx18483\tx19011\tx19539\tx20067\tx20595\tx21123\tx21651\tx22179\tx22707\tx23235\tx23763\tx24291\tx24820\tx25348\tx25876\tx26404\tx26932\tx27460\tx27988\tx28516\tx29044\tx29572\tx30100\tx30628\tx31157\tx31685\tx32213\tx32741\tx33269\tx33797\li80\fi-80\pardirnatural\partightenfactor0
+
+\f1\fs22 \cf2 \
+\cf3 #Load Packages\
+\cf2 library(\cf4 DESeq2\cf2 )\
+library(\cf4 edgeR\cf2 )\
+library(\cf4 limma\cf2 )\
+library(\cf4 Glimma\cf2 )\
+library(\cf4 gplots\cf2 )\
+library(\cf4 RColorBrewer\cf2 )\
+library(\cf4 pheatmap\cf2 )\
+library(\cf4 ggplot2\cf2 )\
+library(\cf4 ggrepel\cf2 )\
+library(\cf4 pathfindR\cf2 )\
+library(\cf4 scales\cf2 )\
+library(\cf4 data.table\cf2 )\
+library(\cf4 fBasics\cf2 )\
+library(\cf4 forcats\cf2 )\
+library(\cf4 vegan\cf2 )\
+library(\cf4 dplyr\cf2 )\
+library(\cf4 MetaboSignal\cf2 )\
+\cf4 theme\cf2 <-theme(\cf4 panel.background\cf2  = element_blank(),\cf4 panel.border\cf2 =element_rect(\cf4 fill\cf2 =\cf5 NA\cf2 ),\cf4 panel.grid.major\cf2  = element_blank(),\cf4 panel.grid.minor\cf2  = element_blank(),\cf4 strip.background\cf2 =element_blank(),\cf4 axis.text.x\cf2 =element_text(\cf4 colour\cf2 =\cf6 "black"\cf2 ),\cf4 axis.text.y\cf2 =element_text(\cf4 colour\cf2 =\cf6 "black"\cf2 ),\cf4 axis.ticks\cf2 =element_line(\cf4 colour\cf2 =\cf6 "black"\cf2 ),\cf4 plot.margin\cf2 =unit(c(\cf7 1\cf2 ,\cf7 1\cf2 ,\cf7 1\cf2 ,\cf7 1\cf2 ),\cf6 "line"\cf2 ), \cf4 legend.position\cf2 =\cf6 "none"\cf2 )\
+\
+\cf3 #Set Theme for Figures\
+\cf4 theme\cf2 <-theme(\cf4 panel.background\cf2  = element_blank(),\cf4 panel.border\cf2 =element_rect(\cf4 fill\cf2 =\cf5 NA\cf2 ),\cf4 panel.grid.major\cf2  = element_blank(),\cf4 panel.grid.minor\cf2  = element_blank(),\cf4 strip.background\cf2 =element_blank(),\cf4 axis.text.x\cf2 =element_text(\cf4 colour\cf2 =\cf6 "black"\cf2 ),\cf4 axis.text.y\cf2 =element_text(\cf4 colour\cf2 =\cf6 "black"\cf2 ),\cf4 axis.ticks\cf2 =element_line(\cf4 colour\cf2 =\cf6 "black"\cf2 ),\cf4 plot.margin\cf2 =unit(c(\cf7 1\cf2 ,\cf7 1\cf2 ,\cf7 1\cf2 ,\cf7 1\cf2 ),\cf6 "line"\cf2 ), \cf4 legend.position\cf2 =\cf6 "none"\cf2 )\
+\cf4 theme2\cf2 <-theme(\cf4 panel.background\cf2  = element_blank(),\cf4 panel.border\cf2 =element_rect(\cf4 fill\cf2 =\cf5 NA\cf2 ),\cf4 panel.grid.major\cf2  = element_blank(),\cf4 panel.grid.minor\cf2  = element_blank(),\cf4 strip.background\cf2 =element_blank(),\cf4 axis.title\cf2 =element_text(\cf4 size\cf2 =\cf7 30\cf2 ,\cf4 face\cf2 =\cf6 "bold"\cf2 ),\cf4 axis.text.x\cf2 =element_blank(),\cf4 axis.text.y\cf2 =element_blank(),\cf4 axis.ticks\cf2 =element_blank(),\cf4 plot.margin\cf2 =unit(c(\cf7 1\cf2 ,\cf7 1\cf2 ,\cf7 1\cf2 ,\cf7 1\cf2 ),\cf6 "line"\cf2 ), \cf4 legend.position\cf2 =\cf6 "none"\cf2 )\
+\
+load(\cf4 file\cf2 =\cf6 "RNA.seq.HUMAN7.RData"\cf2 )\
+\
+\cf3 #load(file="RNA.seq.HUMAN.RData")\
+\cf2 save.image(\cf4 file\cf2 =\cf6 "RNA.seq.HUMAN7.RData"\cf2 )\
+\cf3 #load(file="RNA.seq.HUMAN8.RData")\
+\cf2 load(\cf4 file\cf2 =\cf6 "RNA.seq.HUMAN4.RData"\cf2 )\
+\
+\cf3 #Choose Alpha/FDR\
+\cf4 alpha\cf2  = \cf7 0.01\cf2 \
+\
+\cf3 #Load Meta Data\
+\cf4 coldata\cf2  <- read.delim2(\cf6 "Map.A6.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 )\
+\cf4 coldata\cf2  <- read.delim2(\cf6 "Map.A7.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 )\
+\
+\cf3 #Keep Only MetaData of RNASeq Samples\
+\cf4 coldata\cf2  <- \cf4 coldata\cf2 [\cf4 coldata\cf2 $\cf4 RNAseq\cf2 ==\cf7 1\cf2 ,]\
+\
+\cf3 #Order Meta Data by SampleId\
+\cf4 coldata\cf2  <- \cf4 coldata\cf2 [order(\cf4 coldata\cf2 $\cf4 SampleID\cf2 ),]\
+\
+\cf3 #Order Count Data by SampleID\
+\cf4 mycounts2\cf2 $\cf4 counts\cf2  <-\cf4 mycounts2\cf2 $\cf4 counts\cf2 [, order(colnames(\cf4 mycounts2\cf2 $\cf4 counts\cf2 ))]\
+\
+\cf3 #Confirm Sample IDs match for Count and Meta Data\
+\cf2 table(colnames(\cf4 mycounts2\cf2 $\cf4 counts\cf2 )==as.character(\cf4 coldata\cf2 $\cf4 SampleID\cf2 ))\
+\
+\
+\cf3 #===========================================================================================================================================================================\
+#===========================================================================================================================================================================\
+#//////////////////NSCLC Advanced versus Local /////////////////////\
+#===========================================================================================================================================================================\
+#===========================================================================================================================================================================\
+\cf2 \
+\cf3 #Make CountData and MetaData into DESEq Object; Choose the comparison Variable as design\
+\cf4 dds\cf2  <- DESeqDataSetFromMatrix(\cf4 countData\cf2  = \cf4 mycounts2\cf2 $\cf4 counts\cf2 ,\
+                              \cf4 colData\cf2  = \cf4 coldata\cf2 ,\
+                              \cf4 design\cf2 = ~ \cf4 DMM_Clustering_Lab\cf2 )\
+\
+\cf3 #Estimate Factors of DESeq Object\
+\cf4 dds\cf2  <- estimateSizeFactors(\cf4 dds\cf2 )\
+\
+\cf3 #filter out genes where there are less than 3 samples with normalized counts greater than or equal to 100.\
+\cf4 idx\cf2  <- rowSums( counts(\cf4 dds\cf2 , \cf4 normalized\cf2 =\cf5 TRUE\cf2 ) >= \cf7 100\cf2  ) >= \cf7 3\cf2 \
+\cf4 dds\cf2  <- \cf4 dds\cf2 [\cf4 idx\cf2 ,]\
+\
+\cf3 #Transforming data - Option #1 is regularized-logarithm transformation, or rlog for short. \
+#For genes with high counts, the rlog transformation differs not much from an ordinary log2 transformation. \
+#For genes with lower counts, however, the values are shrunken towards the genes' averages across all sample\
+\cf4 vsd\cf2  <- varianceStabilizingTransformation(\cf4 dds\cf2 )\
+\
+\cf3 #Subset Samples of Interest based on metadata\
+\cf4 dds.cancer\cf2  <- \cf4 dds\cf2 [, \cf4 dds\cf2 $\cf4 Bad_Files\cf2  %\cf5 in\cf2 % \cf7 0\cf2 ]\
+\cf4 dds.cancer\cf2  <- \cf4 dds.cancer\cf2 [,\cf4 dds.cancer\cf2 $\cf4 Cancer\cf2  %\cf5 in\cf2 % \cf7 1\cf2 ]\
+\cf4 dds.cancer\cf2  <- \cf4 dds.cancer\cf2 [,\cf4 dds.cancer\cf2 $\cf4 RNAseq_and_16S\cf2  %\cf5 in\cf2 % \cf7 1\cf2 ]\
+\cf4 dds.cancer\cf2  <- \cf4 dds.cancer\cf2 [,\cf4 dds.cancer\cf2 $\cf4 Paper_cohort_lns\cf2  %\cf5 in\cf2 % \cf7 1\cf2 ]\
+\
+\cf4 vsd.cancer\cf2  <- \cf4 vsd\cf2 [, \cf4 vsd\cf2 $\cf4 Bad_Files\cf2  %\cf5 in\cf2 % \cf7 0\cf2 ]\
+\cf4 vsd.cancer\cf2  <- \cf4 vsd.cancer\cf2 [,\cf4 vsd.cancer\cf2 $\cf4 Cancer\cf2  %\cf5 in\cf2 % \cf7 1\cf2 ]\
+\cf4 vsd.cancer\cf2  <- \cf4 vsd.cancer\cf2 [,\cf4 vsd.cancer\cf2 $\cf4 RNAseq_and_16S\cf2  %\cf5 in\cf2 % \cf7 1\cf2 ]\
+\cf4 vsd.cancer\cf2  <- \cf4 vsd.cancer\cf2 [,\cf4 vsd.cancer\cf2 $\cf4 Paper_cohort_lns\cf2  %\cf5 in\cf2 % \cf7 1\cf2 ]\
+\
+\cf4 dds.cancer\cf2  <- \cf4 dds.cancer\cf2 [,\cf4 dds.cancer\cf2 $\cf4 NSCLC\cf2  %\cf5 in\cf2 % \cf7 1\cf2 ]\
+\cf4 vsd.cancer\cf2  <- \cf4 vsd.cancer\cf2 [,\cf4 vsd.cancer\cf2 $\cf4 NSCLC\cf2  %\cf5 in\cf2 % \cf7 1\cf2 ]\
+\
+\cf3 #Write the filtered table out as TXT file\
+\cf2 write.table(assay(\cf4 dds.cancer\cf2 ),\cf4 file\cf2 =\cf6 "Filtered.NSCLC.Count.Table.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 col.names\cf2  = \cf5 NA\cf2 , \cf4 row.names\cf2  = \cf5 TRUE\cf2 , \cf4 quote\cf2 =\cf5 TRUE\cf2 )\
+\
+\
+\cf4 dds.cancer\cf2  <- \cf4 dds.cancer\cf2 [,\cf4 dds.cancer\cf2 $\cf4 Advanced_Stage_label\cf2  %\cf5 in\cf2 % c(\cf6 "Advance"\cf2 )]\
+\cf3 #vsd.cancer <- vsd.cancer[,vsd.cancer$Advanced_Stage_label %in% c("Advance")]\
+\cf4 dds.cancer\cf2  <- \cf4 dds.cancer\cf2 [,\cf4 dds.cancer\cf2 $\cf4 Advanced_Stage_label\cf2  %\cf5 in\cf2 % c(\cf6 "Local"\cf2 )]\
+\cf4 vsd.cancer\cf2  <- \cf4 vsd.cancer\cf2 [,\cf4 vsd.cancer\cf2 $\cf4 Advanced_Stage_label\cf2  %\cf5 in\cf2 % c(\cf6 "Local"\cf2 )]\
+\
+\cf4 dds.cancer\cf2 $\cf4 DMM_Clustering_Lab\cf2    <- droplevels(\cf4 dds.cancer\cf2 $\cf4 DMM_Clustering_Lab\cf2 )\
+\cf4 vsd.cancer\cf2 $\cf4 DMM_Clustering_Lab\cf2    <- droplevels(\cf4 vsd.cancer\cf2 $\cf4 DMM_Clustering_Lab\cf2 )\
+\
+\cf4 dds.cancer\cf2 $\cf4 Advanced_Stage_label\cf2    <- droplevels(\cf4 dds.cancer\cf2 $\cf4 Advanced_Stage_label\cf2 )\
+\cf4 vsd.cancer\cf2 $\cf4 Advanced_Stage_label\cf2    <- droplevels(\cf4 vsd.cancer\cf2 $\cf4 Advanced_Stage_label\cf2 )\
+\
+\cf3 #=========================================================\
+\cf2 /////////////////////////\cf4 PCOA\cf2  \cf4 PLOT\cf2 ///////////////////////\
+\cf3 #=========================================================\
+#Create Distance Matrix\
+\cf4 vegdist\cf2    = vegdist(t(assay(\cf4 vsd.cancer\cf2 )), \cf4 method\cf2 =\cf6 "bray"\cf2 )\
+\cf3 #Formulate principal component co-ordinates for PCOA plot, k as the choice of PCs\
+\cf4 CmdScale\cf2  <- cmdscale(\cf4 vegdist\cf2 , \cf4 k\cf2  =\cf7 10\cf2 )\
+\cf3 #calculated Sample variance for each PC\
+\cf4 vars\cf2  <- apply(\cf4 CmdScale\cf2 , \cf7 2\cf2 , \cf4 var\cf2 )\
+\cf3 #Create Variable with the Percent Variance\
+\cf4 percentVar\cf2  <- round(\cf7 100\cf2  * (\cf4 vars\cf2 /sum(\cf4 vars\cf2 )))\
+\
+\cf3 #Merge PC Data with MetaData\
+\cf2 require(\cf4 data.table\cf2 )\
+\cf4 newResults\cf2  <- merge(\cf4 x\cf2  = \cf4 CmdScale\cf2 , \cf4 y\cf2  = colData(\cf4 vsd.cancer\cf2 ), \cf4 by\cf2  = \cf6 "row.names"\cf2 , \cf4 all.x\cf2  = \cf5 TRUE\cf2 )\
+\cf3 #Rename Variables for PC1 and PC2\
+\cf2 colnames(\cf4 newResults\cf2 )[colnames(\cf4 newResults\cf2 )==\cf6 "V1"\cf2 ] <- \cf6 "PC1"\cf2 \
+colnames(\cf4 newResults\cf2 )[colnames(\cf4 newResults\cf2 )==\cf6 "V2"\cf2 ] <- \cf6 "PC2"\cf2 \
+colnames(\cf4 newResults\cf2 )[colnames(\cf4 newResults\cf2 )==\cf6 "Row.names"\cf2 ] <- \cf6 "name"\cf2 \
+\
+\cf3 #Calculate the Centroid Value\
+\cf4 centroids\cf2  <- aggregate(cbind(\cf4 PC1\cf2 ,\cf4 PC2\cf2 )~\cf4 Advanced_Stage_label\cf2 ,\cf4 data\cf2 = \cf4 newResults\cf2 , \cf4 mean\cf2 )\
+\cf3 #Merge the Centroid Data into the PCOA Data\
+\cf4 newResults\cf2  <- merge(\cf4 newResults\cf2 ,\cf4 centroids\cf2 ,\cf4 by\cf2 =\cf6 "Advanced_Stage_label"\cf2 ,\cf4 suffixes\cf2 =c(\cf6 ""\cf2 ,\cf6 ".centroid"\cf2 ))\
+\
+pdf(\cf6 "NSCLC_Advanced_v_Local_Bray_RNA_PCA.pdf"\cf2 , \cf4 height\cf2  = \cf7 10\cf2 , \cf4 width\cf2  = \cf7 10\cf2 )\
+    ggplot(\cf4 newResults\cf2 , aes(\cf4 PC1\cf2 , \cf4 PC2\cf2 , \cf4 color\cf2 =\cf4 Advanced_Stage_label\cf2 )) +\
+    geom_point(\cf4 size\cf2 =\cf7 5\cf2 ) +\
+    xlab(paste0(\cf6 "PC1: "\cf2 ,\cf4 percentVar\cf2 [\cf7 1\cf2 ],\cf6 "% variance"\cf2 )) +\
+    ylab(paste0(\cf6 "PC2: "\cf2 ,\cf4 percentVar\cf2 [\cf7 2\cf2 ],\cf6 "% variance"\cf2 )) + \
+    \cf3 #coord_fixed() +\
+\cf2     scale_color_manual(\cf4 values\cf2 =c(\cf6 "#BC27C6"\cf2 , \cf6 "#A584F7"\cf2 )) + \
+    \cf3 #plot ellipse\
+\cf2     \cf3 #stat_ellipse(type = "t") + \
+\cf2     \cf3 #plot point and lines from centroid\
+\cf2     geom_point(\cf4 data\cf2 =\cf4 centroids\cf2 , aes(\cf4 x\cf2 =\cf4 PC1\cf2 , \cf4 y\cf2 =\cf4 PC2\cf2 , \cf4 color\cf2 =\cf4 Advanced_Stage_label\cf2 ), \cf4 size\cf2 =\cf7 0\cf2 ) +\
+    geom_segment(aes(\cf4 x\cf2 =\cf4 PC1.centroid\cf2 , \cf4 y\cf2 =\cf4 PC2.centroid\cf2 , \cf4 xend\cf2 =\cf4 PC1\cf2 , \cf4 yend\cf2 =\cf4 PC2\cf2 , \cf4 color\cf2 =\cf4 Advanced_Stage_label\cf2 ))+ \
+    \cf3 #labels centroids \
+\cf2     geom_label_repel(\cf4 data\cf2  = \cf4 centroids\cf2 , aes(\cf4 x\cf2 =\cf4 PC1\cf2 , \cf4 y\cf2 =\cf4 PC2\cf2 , \cf4 label\cf2 =c(\cf6 "Advanced"\cf2 , \cf6 "Local"\cf2 )), \cf4 size\cf2 =\cf7 10\cf2 ) +\
+    \cf3 #geom_label_repel(data = centroids, aes(x=PC1, y=PC2, label=lab), parse=TRUE,size=10) +\
+\cf2     scale_x_reverse() +\
+    theme(\cf4 panel.background\cf2  = element_blank(),\cf4 panel.border\cf2 =element_rect(\cf4 fill\cf2 =\cf5 NA\cf2 ),\cf4 panel.grid.major\cf2  = element_blank(),\cf4 panel.grid.minor\cf2  = element_blank(),\cf4 strip.background\cf2 =element_blank(),\cf4 axis.title\cf2 =element_text(\cf4 size\cf2 =\cf7 30\cf2 ,\cf4 face\cf2 =\cf6 "bold"\cf2 ),\cf4 axis.text.x\cf2 =element_blank(),\cf4 axis.text.y\cf2 =element_blank(),\cf4 axis.ticks\cf2 =element_blank(),\cf4 plot.margin\cf2 =unit(c(\cf7 1\cf2 ,\cf7 1\cf2 ,\cf7 1\cf2 ,\cf7 1\cf2 ),\cf6 "line"\cf2 ), \cf4 legend.position\cf2 =\cf6 "none"\cf2 )\
+dev.off()\
+\
+\
+\
+\
+\
+\cf3 #=========================================================\
+\cf2 ////////////////\cf4 DIFFERENTIAL\cf2  \cf4 ANALYSIS\cf2 ////////////////\
+\cf3 #=========================================================\
+#Set Reference Level for Comparison (Control Group)\
+\cf4 dds.cancer\cf2 $\cf4 DMM_Clustering_Lab\cf2  <- relevel(\cf4 dds.cancer\cf2 $\cf4 DMM_Clustering_Lab\cf2 , \cf4 ref\cf2 =\cf6 "BAL_BPT"\cf2 )\
+\cf4 dds.cancer\cf2 $\cf4 Advanced_Stage_label\cf2  <- relevel(\cf4 dds.cancer\cf2 $\cf4 Advanced_Stage_label\cf2 , \cf4 ref\cf2 =\cf6 "Local"\cf2 )\
+\
+\cf3 #Run the differential Analysis\
+\cf4 dds.cancer\cf2  <- DESeq(\cf4 dds.cancer\cf2 )\
+\cf4 res.cancer\cf2  <- results(\cf4 dds.cancer\cf2 )\
+\
+\
+\cf3 # Reorder Results based on FDR\
+\cf4 res.cancer\cf2  = \cf4 res.cancer\cf2 [order(\cf4 res.cancer\cf2 $\cf4 padj\cf2 , \cf4 na.last\cf2  = \cf5 NA\cf2 ), ]\
+\
+\cf3 #Create list of top 50 Significant Genes\
+\cf4 select_genes\cf2  = rownames(\cf4 res.cancer\cf2 [\cf4 res.cancer\cf2 $\cf4 padj\cf2  < \cf4 alpha\cf2  & !is.na(\cf4 res.cancer\cf2 $\cf4 padj\cf2 ), ])[\cf7 1\cf2 :\cf7 50\cf2 ]\
+\
+\cf3 #Create List of genes with padj < specified FDR\
+\cf4 keepGENES\cf2  = rownames(\cf4 res.cancer\cf2 [\cf4 res.cancer\cf2 $\cf4 padj\cf2  < \cf4 alpha\cf2  & !is.na(\cf4 res.cancer\cf2 $\cf4 padj\cf2 ), ])\
+\
+\cf3 #keep only significant genes in the table\
+\cf4 dds.cancer2\cf2  <- as.data.frame(assay(\cf4 dds.cancer\cf2 )[\cf4 keepGENES\cf2 ,])\
+\cf4 dds.cancer2\cf2  <- as.data.frame(assay(\cf4 dds.cancer\cf2 ))\
+\cf3 #Load Human Library\
+\cf2 library(\cf4 org.Hs.eg.db\cf2 )\
+\
+\cf3 #Get Entrez ID for Gene Symbols\
+#kegg <- mget(as.character(rownames(dds.cancer3) ), KEGGEXTID2PATHID, ifnotfound=list(NA))\
+\cf2 \
+\cf3 #Create column with genes\
+\cf4 dds.cancer2\cf2 $\cf4 genes\cf2  <- rownames(\cf4 dds.cancer2\cf2 )\
+\cf3 ##Get the Entrez gene IDs associated with those symbols\
+\cf4 dds.cancer2\cf2 $\cf4 entrez_ID\cf2  = mget(as.character(\cf4 dds.cancer2\cf2 $\cf4 genes\cf2 ), revmap(\cf4 org.Hs.egSYMBOL\cf2 ),\cf4 ifnotfound\cf2 =\cf5 NA\cf2 )\
+\cf4 dds.cancer2\cf2 $\cf4 entrez_ID\cf2  <- as.character(\cf4 dds.cancer2\cf2 $\cf4 entrez_ID\cf2 ) \
+\
+\cf3 #Split the multiple entrez IDs into their own Rows\
+\cf2 library(\cf4 splitstackshape\cf2 )\
+\cf4 dds.cancer2\cf2  <- cSplit(as.data.table(\cf4 dds.cancer2\cf2 )[, \cf4 entrez_ID\cf2  := gsub(\cf6 "[][\\"]"\cf2 , \cf6 ""\cf2 , \cf4 entrez_ID\cf2 )], \
+       \cf6 "entrez_ID"\cf2 , \cf6 ","\cf2 , \cf6 "long"\cf2 )\
+\cf3 #Remove the c(\
+\cf4 dds.cancer2\cf2 [] <- lapply(\cf4 dds.cancer2\cf2 , \cf4 gsub\cf2 , \cf4 pattern\cf2 =\cf6 'c\\\\('\cf2 , \cf4 replacement\cf2 =\cf6 ''\cf2 )\
+\cf3 #Remove the )\
+\cf4 dds.cancer2\cf2 [] <- lapply(\cf4 dds.cancer2\cf2 , \cf4 gsub\cf2 , \cf4 pattern\cf2 =\cf6 ')'\cf2 , \cf4 replacement\cf2 =\cf6 ''\cf2 )\
+\cf3 #Make sure NA is NA\
+\cf4 dds.cancer2\cf2 [\cf4 dds.cancer2\cf2 ==\cf6 "NA"\cf2 ] <- \cf5 NA\cf2 \
+\
+\cf3 ##Then get the KEGG IDs associated with those entrez genes.\
+#dds.cancer2$KO_Number = mget(dds.cancer2$entrez_ID, org.Hs.egPATH,ifnotfound=NA)\
+#dds.cancer2$KO_Number = mget(as.character(dds.cancer2$EID), org.Hs.egPATH,ifnotfound=NA)\
+\cf2 \
+\cf3 #eg2np <- bitr_kegg(dds.cancer2$EID, fromType='ncbi-geneid', toType='kegg', organism='hsa')\
+\cf2 \
+\cf3 #get the KOs for the Entrez ID\
+\cf4 KO\cf2  <- MS_convertGene(\cf4 dds.cancer2\cf2 $\cf4 entrez_ID\cf2 , \cf4 organism_code\cf2 =\cf6 "hsa"\cf2 , \cf4 organism_name\cf2 =\cf6 "human"\cf2 , \cf4 output\cf2  = \cf6 "matrix"\cf2 ,\
+               \cf4 orthology\cf2  = \cf5 TRUE\cf2 )\
+\
+\cf3 #Convert KO Table to a Data Frame\
+\cf4 KO\cf2  <- as.data.frame(\cf4 KO\cf2 )\
+\cf3 #Make sure Entrez ID is a character (usually outputs as a list)\
+\cf4 KO\cf2 $\cf4 entrez_ID\cf2  <- as.character(\cf4 KO\cf2 $\cf4 entrez_ID\cf2 )\
+\cf3 #Merge the KO data Frame with the Abudance Table\
+\cf4 KO\cf2  <- merge(\cf4 dds.cancer2\cf2 , \cf4 KO\cf2 , \cf4 by\cf2 =\cf6 "entrez_ID"\cf2 , \cf4 all\cf2 =\cf5 TRUE\cf2 )\
+\
+\cf3 #Convert numeric columns to numeric\
+#df2 <- as.data.frame(sapply(KO [,2:73],as.numeric))\
+#Bring back the KO_Number character\
+#df2$KEGG_ID <- KO$KEGG_ID\
+#df2 <- df2[!is.na(df2$KEGG_ID),]\
+#Sum the repeated KOs per sample\
+#require(dplyr)\
+#df2 <- df2 %>% group_by(KEGG_ID) %>% summarise_each(funs(sum))\
+#Convert it to a DataFrame\
+\cf4 KO\cf2  <- as.data.frame(\cf4 KO\cf2 )\
+\
+\cf3 #Now to get the pathway trail\
+#Load libraries required\
+\cf2 library(\cf4 KEGGREST\cf2 )\
+library(\cf4 dplyr\cf2 )\
+library(\cf4 tidyr\cf2 )\
+library(\cf4 stringr\cf2 )\
+\
+\cf3 #For each KEGG ID this loop will find the Pathway trail and output it as a list (this is resource heavy and should be run on an HPC)\
+\cf5 for\cf2 (\cf4 i\cf2  \cf5 in\cf2  \cf7 1\cf2 :length(\cf4 KO\cf2 $\cf4 KEGG_ID\cf2 ))\{\
+  \cf3 #ERROR HANDLING\
+\cf2   \cf4 possibleError\cf2  <- tryCatch(\
+      keggGet(\cf4 KO\cf2 $\cf4 KEGG_ID\cf2 [\cf4 i\cf2 ])[[\cf7 1\cf2 ]]$\cf4 BRITE\cf2 ,\
+      \cf4 error\cf2 =\cf5 function\cf2 (\cf4 e\cf2 ) \cf4 e\cf2 \
+  )\
+\
+  \cf5 if\cf2 (!inherits(\cf4 possibleError\cf2 , \cf6 "error"\cf2 ))\{\
+    \cf3 #REAL WORK\
+\cf2     \cf4 KO\cf2 $\cf4 path\cf2 [\cf4 i\cf2 ] <- as.list(as.data.frame((keggGet(\cf4 KO\cf2 $\cf4 KEGG_ID\cf2 [\cf4 i\cf2 ])[[\cf7 1\cf2 ]]$\cf4 BRITE\cf2 )))  \}\
+\
+\}  \cf3 #end for\
+#t(sapply(test, '[', seq(max(lengths(test)))))\
+\cf2 \
+\cf3 #Break list of Brite Pathway into columns for each line\
+\cf4 df\cf2  <- \cf4 KO\cf2  %>% unnest(\cf4 path\cf2 ) %>% \
+       group_by(\cf4 genes\cf2 ) %>% \
+       mutate(\cf4 col\cf2 =seq_along(\cf4 genes\cf2 )) %>% \cf3 #add a column indicator\
+\cf2        spread(\cf4 key\cf2 =\cf4 col\cf2 , \cf4 value\cf2 =\cf4 path\cf2 )\
+\cf3 #Convert object to Data Frame\
+\cf4 df\cf2  <- as.data.frame(\cf4 df\cf2 )\
+\cf3 #replace all new level with / (can't use | cause it codes for OR)\
+#df.new = as.data.frame(lapply(df, function(x) gsub(".*;.*", "/", x)))\
+#Replace any existing / with # incase it gets messed up in the code later\
+\cf4 df.new\cf2  = as.data.frame(lapply(\cf4 df\cf2 , \cf5 function\cf2 (\cf4 x\cf2 ) gsub(\cf6 "/"\cf2 , \cf6 "#"\cf2 , \cf4 x\cf2 )))\
+\cf3 #Add a character if there is a single space at the start of the trail (this is level 1)\
+\cf4 df.new\cf2  = as.data.frame(lapply(\cf4 df.new\cf2 , \cf5 function\cf2 (\cf4 x\cf2 ) gsub(\cf6 "^\\\\s"\cf2 , \cf6 "/"\cf2 , \cf4 x\cf2 )))\
+\cf3 #Add a character if there is no space at the start of the trail (this is also level 1)\
+#df.new[,77:ncol(df.new)] = as.data.frame(lapply(df.new[,77:ncol(df.new)], function(x) gsub("^\\\\S", "?", x)))\
+#Add a second character so you know where is more whitespace (these are not level 1)\
+\cf4 df.new\cf2  = as.data.frame(lapply(\cf4 df.new\cf2 , \cf5 function\cf2 (\cf4 x\cf2 ) gsub(\cf6 "\\\\s"\cf2 , \cf6 "&"\cf2 , \cf4 x\cf2 )))\
+\cf3 #incase there are some without whitespace to start add white spice (these are also level 1)\
+\cf4 df.new\cf2 [,\cf7 77\cf2 :ncol(\cf4 df.new\cf2 )] = as.data.frame(lapply(\cf4 df.new\cf2 [,\cf7 77\cf2 :ncol(\cf4 df.new\cf2 )], \cf5 function\cf2 (\cf4 x\cf2 ) gsub(\cf6 "^"\cf2 , \cf6 " "\cf2 , \cf4 x\cf2 )))\
+\cf3 #Add a character infront of this new whitespace (this is also level 1)\
+\cf4 df.new\cf2  = as.data.frame(lapply(\cf4 df.new\cf2 , \cf5 function\cf2 (\cf4 x\cf2 ) gsub(\cf6 "^\\\\s"\cf2 , \cf6 "/"\cf2 , \cf4 x\cf2 )))\
+\
+\cf3 #Find out the column number of the first in the trail\
+\cf2 which(colnames(\cf4 df.new\cf2 )==\cf6 "X2"\cf2  )\
+\cf3 #77\
+#Combine all columns from the beginning of the trail to the end of the data frame\
+\cf4 df.new\cf2 $\cf4 trail\cf2  <- apply(\cf4 df.new\cf2 [ ,\cf7 77\cf2 :ncol(\cf4 df.new\cf2 ) ] , \cf7 1\cf2  , \cf4 paste\cf2  , \cf4 sep\cf2 =\cf6 ""\cf2 ,\cf4 collapse\cf2  = \cf6 ";"\cf2  )\
+\cf3 #df.new$trail <- gsub("Brite Hierarchies;","",df.new$trail)\
+\cf4 df.new\cf2 $\cf4 trail\cf2  <- gsub(\cf6 "//0"\cf2 ,\cf6 "@0"\cf2 ,\cf4 df.new\cf2 $\cf4 trail\cf2 )\
+\cf3 #df.new$trail <- gsub("/[A-Z]","",df.new$trail)\
+\cf4 df.new\cf2 $\cf4 trail\cf2  <- gsub(\cf6 "//&"\cf2 ,\cf6 ""\cf2 ,\cf4 df.new\cf2 $\cf4 trail\cf2 )\
+\cf4 df.new\cf2 $\cf4 trail\cf2  <- gsub(\cf6 "&"\cf2 ,\cf6 " "\cf2 ,\cf4 df.new\cf2 $\cf4 trail\cf2 )\
+\cf3 #df.new$trail <- gsub("","@",df.new$trail)\
+\cf4 df.new\cf2 $\cf4 trail\cf2  <- gsub(\cf6 "//"\cf2 ,\cf6 ""\cf2 ,\cf4 df.new\cf2 $\cf4 trail\cf2 )\
+\cf4 df.new\cf2 $\cf4 trail\cf2  <- gsub(\cf6 "/"\cf2 ,\cf6 "@"\cf2 ,\cf4 df.new\cf2 $\cf4 trail\cf2 )\
+\
+\
+\cf3 #Remove the NAs\
+\cf4 df.new\cf2 $\cf4 trail\cf2  <- gsub(\cf6 ";NA"\cf2 ,\cf6 ""\cf2 ,\cf4 df.new\cf2 $\cf4 trail\cf2 )\
+\cf3 #Remove Numbers\
+#df.new$trail <- gsub('[[:digit:]]+',"",df.new$trail)\
+#Remove Brite Path\
+\cf4 df.new\cf2 $\cf4 trail\cf2  <- gsub(\cf6 "\\\\s*\\\\[[^\\\\)]+\\\\]"\cf2 ,\cf6 ""\cf2 ,\cf4 df.new\cf2 $\cf4 trail\cf2 )\
+\cf3 #Remove White Space\
+\cf4 df.new\cf2 $\cf4 trail\cf2  <- str_squish(\cf4 df.new\cf2 $\cf4 trail\cf2 )\
+\cf3 #Remove WhiteSpace\
+\cf4 df.new\cf2 $\cf4 trail\cf2  <- gsub(\cf6 ";\\\\s"\cf2 , \cf6 ";"\cf2 , \cf4 df.new\cf2 $\cf4 trail\cf2 )\
+\cf3 #change the ;/; to |\
+#df.new$trail <- gsub(";/;", "|", df.new$trail)\
+#Remove ;/ at the end of the trail\
+#df.new$trail <- gsub(";/", "", df.new$trail)\
+#change the starting @ to nothing\
+\cf4 df.new\cf2 $\cf4 trail\cf2  <- gsub(\cf6 "^@"\cf2 , \cf6 ""\cf2 , \cf4 df.new\cf2 $\cf4 trail\cf2 )\
+\cf3 #change the ;@ to |\
+\cf4 df.new\cf2 $\cf4 trail\cf2  <- gsub(\cf6 ";@"\cf2 , \cf6 "|"\cf2 , \cf4 df.new\cf2 $\cf4 trail\cf2 )\
+\cf3 #change the @ to |\
+\cf4 df.new\cf2 $\cf4 trail\cf2  <- gsub(\cf6 "@"\cf2 , \cf6 "|"\cf2 , \cf4 df.new\cf2 $\cf4 trail\cf2 )\
+\cf3 #change the # back to /\
+\cf4 df.new\cf2 $\cf4 trail\cf2  <- gsub(\cf6 "#"\cf2 , \cf6 "/"\cf2 , \cf4 df.new\cf2 $\cf4 trail\cf2 )\
+\cf3 #Remove unnwated character in column names\
+\cf2 names(\cf4 df.new\cf2 ) = gsub(\cf4 pattern\cf2  = \cf6 "X"\cf2 , \cf4 replacement\cf2  = \cf6 ""\cf2 , \cf4 x\cf2  = names(\cf4 df.new\cf2 ))\
+\
+\cf3 #For the Gene Table Only\
+\cf4 genes\cf2  <- \cf4 df.new\cf2 [,\cf7 1\cf2 :\cf7 74\cf2 ]\
+\cf3 #move genes to top\
+\cf4 genes\cf2 $\cf4 entrez_ID\cf2  <- \cf4 genes\cf2 $\cf4 genes\cf2 \
+\cf3 #remove genes column\
+\cf4 genes\cf2  <- \cf4 genes\cf2 [,\cf7 1\cf2 :\cf7 73\cf2 ]\
+\cf3 #rename Genes column\
+\cf2 colnames(\cf4 genes\cf2 )[which(names(\cf4 genes\cf2 ) == \cf6 "entrez_ID"\cf2 )] <- \cf6 "Genes"\cf2 \
+\cf3 #Write Pathway Table to TXT\
+\cf2 write.table(\cf4 genes\cf2 ,\cf4 file\cf2 = \cf6 "Genes.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 col.names\cf2  = \cf5 TRUE\cf2 , \cf4 row.names\cf2  = \cf5 FALSE\cf2 )\
+\
+\cf3 #change trail to NA if KEGG not found\
+\cf4 df.new\cf2 $\cf4 trail\cf2  <- ifelse(is.na(\cf4 df.new\cf2 $\cf4 KEGG_ID\cf2 ), \cf5 NA\cf2 , \cf4 df.new\cf2 $\cf4 trail\cf2 )\
+\cf3 #Move the trail column before removing columns\
+\cf4 df.new\cf2 $\cf4 entrez_ID\cf2  <- \cf4 df.new\cf2 $\cf4 trail\cf2 \
+\cf3 #Remove unwanted columns from 1 to the beginning of the trail from previous\
+\cf4 df.new\cf2  <- \cf4 df.new\cf2 [,\cf7 1\cf2 :\cf7 74\cf2 ] \cf3 #75 if you want to remove the KEGG_ID\
+#Move the trail to the end\
+\cf4 df.new\cf2 $\cf4 path\cf2  <- \cf4 df.new\cf2 $\cf4 entrez_ID\cf2 \
+\cf3 #Put Genes at the beginning and rename variable\
+\cf4 df.new\cf2 $\cf4 entrez_ID\cf2  <- \cf4 df.new\cf2 $\cf4 genes\cf2 \
+colnames(\cf4 df.new\cf2 )[which(names(\cf4 df.new\cf2 ) == \cf6 "entrez_ID"\cf2 )] <- \cf6 "Genes"\cf2 \
+\cf3 #Remove Unwanted columns\
+\cf4 df.new\cf2  <- \cf4 df.new\cf2 [,!names(\cf4 df.new\cf2 ) %\cf5 in\cf2 % c(\cf6 "genes"\cf2 )]\
+\cf3 #Write Pathway Table to TXT\
+\cf2 write.table(\cf4 df.new\cf2 ,\cf4 file\cf2 = \cf6 "Genes_with_KO_Pathway.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 col.names\cf2  = \cf5 TRUE\cf2 , \cf4 row.names\cf2  = \cf5 FALSE\cf2 )\
+\
+\
+\cf3 #put KEGG ID at the beginning and rename variable\
+#df.new$entrez_ID <- df.new$KEGG_ID\
+#colnames(df.new)[which(names(df.new) == "entrez_ID")] <- "KO"\
+#Remove all other unwanted columns\
+#df.new <- df.new[,!names(df.new) %in% c("KEGG_ID","genes")]\
+#Remove any NA KEGGS\
+#df.new <- df.new[!is.na(df.new$KO),]\
+#Write Pathway Table to TXT\
+\cf2 write.table(\cf4 df.new\cf2 ,\cf4 file\cf2 = \cf6 "KO_Pathway.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 col.names\cf2  = \cf5 TRUE\cf2 , \cf4 row.names\cf2  = \cf5 FALSE\cf2 )\
+\
+\
+\
+\cf5 for\cf2 (\cf4 i\cf2  \cf5 in\cf2  \cf7 1\cf2 :length(\cf4 KO2\cf2 $\cf4 KEGG_ID\cf2 ))\{\
+  \cf4 KO2\cf2 $\cf4 path\cf2 [\cf4 i\cf2 ] <- as.list(as.data.frame((keggGet(\cf4 KO2\cf2 $\cf4 KEGG_ID\cf2 [\cf4 i\cf2 ])[[\cf7 1\cf2 ]]$\cf4 BRITE\cf2 )))\
+\}\
+\
+\cf5 for\cf2 (\cf4 i\cf2  \cf5 in\cf2  \cf7 1\cf2 :length(\cf4 KO2\cf2 $\cf4 KEGG_ID\cf2 ))\{\
+  \cf4 list\cf2 [\cf4 i\cf2 ] <- ifelse((is.na(\cf4 KO2\cf2 $\cf4 KEGG_ID\cf2 [\cf4 i\cf2 ])), \cf5 NA\cf2 , as.list(as.data.frame((keggGet(\cf4 KO2\cf2 $\cf4 KEGG_ID\cf2 [\cf4 i\cf2 ])[[\cf7 1\cf2 ]]$\cf4 BRITE\cf2 ))))\
+\}\
+\
+\
+saveRDS(\cf4 KO\cf2 , \cf4 file\cf2  = \cf6 "KO.rds"\cf2 )\
+\
+\cf3 #Replace NA with NA\
+\cf4 dds.cancer2\cf2 [\cf4 dds.cancer2\cf2 ==\cf6 "NA"\cf2 ] <- \cf5 NA\cf2 \
+\
+\cf3 #Create variable with count of KOs\
+#dds.cancer2$KOn <- lengths(gregexpr(",", dds.cancer2$KO_Number)) + 1\
+\cf4 dds.cancer2\cf2 $\cf4 KOn\cf2  <- lengths(\cf4 dds.cancer2\cf2 $\cf4 KO_Number\cf2 )\
+\cf4 dds.cancer2\cf2 $\cf4 KOn\cf2  <- ifelse(is.na(\cf4 dds.cancer2\cf2 $\cf4 KO_Number\cf2 ) & \cf4 dds.cancer2\cf2 $\cf4 KOn\cf2 ==\cf7 1\cf2 , \cf5 NA\cf2 , \cf4 dds.cancer2\cf2 $\cf4 KOn\cf2 )\
+\
+\cf3 #Create a new dataframe and divide the number of reads between the number of KOs\
+\cf4 df\cf2  <- as.data.frame(\cf4 dds.cancer2\cf2 )\
+\cf4 df\cf2  <- \cf4 df\cf2 [,\cf7 1\cf2 :\cf7 72\cf2 ] / \cf4 df\cf2 [,\cf7 76\cf2 ] \
+\
+\cf3 #Create column with genes\
+\cf4 df\cf2 $\cf4 genes\cf2  <- rownames(\cf4 df\cf2 )\
+\cf3 ##Get the Entrez gene IDs associated with those symbols\
+\cf4 df\cf2 $\cf4 EID\cf2  = mget(as.character(\cf4 df\cf2 $\cf4 genes\cf2 ), revmap(\cf4 org.Hs.egSYMBOL\cf2 ),\cf4 ifnotfound\cf2 =\cf5 NA\cf2 )\
+\
+\cf3 ##Then get the KEGG IDs associated with those entrez genes.\
+\cf4 df\cf2 $\cf4 KO_Number\cf2  = mget(as.character(\cf4 df\cf2 $\cf4 EID\cf2 ), \cf4 org.Hs.egPATH\cf2 ,\cf4 ifnotfound\cf2 =\cf5 NA\cf2 )\
+\
+\
+\cf3 #Create a row for each KO and Gene Combination\
+\cf2 library(\cf4 splitstackshape\cf2 )\
+\cf4 df\cf2  <- cSplit(as.data.table(\cf4 df\cf2 )[, \cf4 KO_Number\cf2  := gsub(\cf6 "[][\\"]"\cf2 , \cf6 ""\cf2 , \cf4 KO_Number\cf2 )], \
+       \cf6 "KO_Number"\cf2 , \cf6 ","\cf2 , \cf6 "long"\cf2 )\
+\
+\cf3 #Remove the c(\
+\cf4 df\cf2 [] <- lapply(\cf4 df\cf2 , \cf4 gsub\cf2 , \cf4 pattern\cf2 =\cf6 'c\\\\('\cf2 , \cf4 replacement\cf2 =\cf6 ''\cf2 )\
+\cf3 #Remove the )\
+\cf4 df\cf2 [] <- lapply(\cf4 df\cf2 , \cf4 gsub\cf2 , \cf4 pattern\cf2 =\cf6 ')'\cf2 , \cf4 replacement\cf2 =\cf6 ''\cf2 )\
+\cf3 #Make sure NA is NA\
+\cf4 df\cf2 [\cf4 df\cf2 ==\cf6 "NA"\cf2 ] <- \cf5 NA\cf2 \
+\cf3 #Put a K before the KO Number\
+\cf4 df\cf2 $\cf4 KO_Number\cf2  <- ifelse(is.na(\cf4 df\cf2 $\cf4 KO_Number\cf2 ),\cf4 df\cf2 $\cf4 KO_Number\cf2 ,paste0(\cf6 "K"\cf2 , \cf4 df\cf2 $\cf4 KO_Number\cf2 ))\
+\cf3 #Remove WhiteSpace\
+\cf4 df\cf2 $\cf4 KO_Number\cf2  <- gsub( \cf6 " "\cf2 , \cf6 ""\cf2 , \cf4 df\cf2 $\cf4 KO_Number\cf2 )\
+\
+\cf3 #Remove NAs\
+\cf4 df\cf2  <- \cf4 df\cf2 [!is.na(\cf4 df\cf2 $\cf4 KEGG_ID\cf2 ),]\
+\cf3 #Convert to a dataframe\
+\cf4 df\cf2  <- as.data.frame(\cf4 df\cf2 )\
+\cf3 #Convert numeric columns to numeric\
+\cf4 df2\cf2  <- as.data.frame(sapply(\cf4 df\cf2 [,\cf7 2\cf2 :\cf7 73\cf2 ],\cf4 as.numeric\cf2 ))\
+\cf3 #Bring back the KO_Number character\
+\cf4 df2\cf2 $\cf4 KO_Number\cf2  <- \cf4 df\cf2 $\cf4 KEGG_ID\cf2 \
+\cf3 #Sum the repeated KOs per sample\
+\cf2 require(\cf4 dplyr\cf2 )\
+\cf4 df2\cf2  <- \cf4 df2\cf2  %>% group_by(\cf4 KO_Number\cf2 ) %>% summarise_each(funs(\cf4 sum\cf2 ))\
+\cf3 #Write table to TXT\
+\cf2 write.table(\cf4 df2\cf2 ,\cf4 file\cf2 = \cf6 "KO_Number.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 col.names\cf2  = \cf5 TRUE\cf2 , \cf4 row.names\cf2  = \cf5 FALSE\cf2 )\
+\
+\cf3 #Create new data frame to run the pathway analysis\
+\cf4 results\cf2  <- as.data.frame(\cf4 df2\cf2 )\
+\cf3 #Remove unwanted columns\
+\cf4 results\cf2  <- \cf4 results\cf2 [,!(names(\cf4 results\cf2 ) %\cf5 in\cf2 % c(\cf6 "KO_Number"\cf2 ,\cf6 "genes"\cf2 ,\cf6 "EID"\cf2 ,\cf6 "entrez_ID"\cf2 ))]\
+\cf4 results\cf2 $\cf4 KO_Number\cf2 <-\cf4 results\cf2 $\cf4 KEGG_ID\cf2 \
+\cf3 #Asign Hierarchy to KO Number\
+\cf4 results\cf2  <- assign_hierarchy(\cf4 count_data\cf2 =\cf4 results\cf2 , \cf4 keep_unknowns\cf2 =\cf5 TRUE\cf2 , \cf4 identifier\cf2 =\cf6 "KO_Number"\cf2 )\
+\cf3 #Remove Number from Subclass\
+\cf4 results\cf2 $\cf4 KO_Subclass_2\cf2  <- gsub(\cf6 '[[:digit:]]+'\cf2 , \cf6 ''\cf2 , \cf4 results\cf2 $\cf4 KO_Subclass_2\cf2  )\
+\cf3 #Remove Path Number from Subclass\
+\cf4 results\cf2 $\cf4 KO_Subclass_2\cf2  <- gsub(\cf6 "\\\\s*\\\\[[^\\\\)]+\\\\]"\cf2 ,\cf6 ""\cf2 ,\cf4 results\cf2 $\cf4 KO_Subclass_2\cf2 )\
+\
+\cf3 #Remove NAs\
+\cf4 results\cf2  <- \cf4 results\cf2 [!is.na(\cf4 results\cf2 $\cf4 KO_Subclass_2\cf2 ),]\
+\
+\cf3 #Create new Column of Pathway Trail\
+\cf4 results\cf2 $\cf4 Pathway\cf2  <- paste0(\cf4 results\cf2 $\cf4 KO_Number\cf2 ,\cf6 "|"\cf2 ,\cf4 results\cf2 $\cf4 KO_Class\cf2 ,\cf6 "|"\cf2 ,\cf4 results\cf2 $\cf4 KO_Subclass_1\cf2 ,\cf6 "|"\cf2 , \cf4 results\cf2 $\cf4 KO_Subclass_2\cf2 )\
+\cf4 results\cf2 $\cf4 Pathway\cf2  <- paste0(\cf4 results\cf2 $\cf4 KO_Class\cf2 ,\cf6 "|"\cf2 ,\cf4 results\cf2 $\cf4 KO_Subclass_1\cf2 ,\cf6 "|"\cf2 , \cf4 results\cf2 $\cf4 KO_Subclass_2\cf2 )\
+\
+\cf3 #Remove unwanted columns\
+\cf4 results2\cf2  <- \cf4 results\cf2 [,!(names(\cf4 results\cf2 ) %\cf5 in\cf2 % c(\cf6 "KO_Class"\cf2 ,\cf6 "KO_Subclass_1"\cf2 ,\cf6 "KO_Subclass_2"\cf2 ,\cf6 "KEGG_ID"\cf2 ,\cf6 "KO_Number"\cf2 ))]\
+\cf3 #Sum the repeated Pathways per sample\
+\cf2 require(\cf4 dplyr\cf2 )\
+\cf4 results2\cf2  <- \cf4 results2\cf2  %>% group_by(\cf4 Pathway\cf2 ) %>% summarise_each(funs(\cf4 sum\cf2 ))\
+\cf3 #Write table to TXT\
+\cf2 write.table(\cf4 results\cf2 ,\cf4 file\cf2 = \cf6 "KO_Pathway.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 col.names\cf2  = \cf5 NA\cf2 , \cf4 row.names\cf2  = \cf5 TRUE\cf2 )\
+\
+\
+\
+\cf3 #=========================================================\
+\cf2 //////////////////////\cf4 TABLES\cf2 /////////////////////////////\
+\cf3 #=========================================================\
+#convert counts to a data.frame\
+\cf4 cyber\cf2  <- as.data.frame(assay(\cf4 vsd.cancer\cf2 ))\
+\
+\cf3 #Calculate Average Gene Expression per Condition\
+\cf4 avg\cf2  <- sapply(levels(\cf4 dds.cancer\cf2 $\cf4 Simple_Path_lns\cf2 ), \cf5 function\cf2 (\cf4 lvl\cf2 ) rowMeans( counts(\cf4 dds.cancer\cf2 ,\cf4 normalized\cf2 =\cf5 TRUE\cf2 )[,\cf4 dds.cancer\cf2 $\cf4 Advanced_Stage_label\cf2  == \cf4 lvl\cf2 ] ) )\
+\cf4 avg\cf2  <- sapply(levels(\cf4 dds.cancer\cf2 $\cf4 DMM_Clustering_Lab\cf2 ), \cf5 function\cf2 (\cf4 lvl\cf2 ) rowMeans( counts(\cf4 dds.cancer\cf2 ,\cf4 normalized\cf2 =\cf5 TRUE\cf2 )[,\cf4 dds.cancer\cf2 $\cf4 DMM_Clustering_Lab\cf2  == \cf4 lvl\cf2 ] ) )\
+\
+\cf3 #Convert Resuts table into a data.frame\
+\cf4 res.cancer\cf2 $\cf4 SYMBOL\cf2  <- rownames(\cf4 res.cancer\cf2 )\
+\
+       \cf4 Length\cf2   \cf4 Symbol\cf2  \cf4 logFC\cf2  \cf4 unshrunk.logFC\cf2  \cf4 logCPM\cf2    \cf4 PValue\cf2       \cf4 FDR\cf2 \
+\cf7 12992\cf2      \cf7 765\cf2  \cf4 Csn1s2b\cf2   \cf7 6.08\cf2            \cf7 6.09\cf2   \cf7 10.19\cf2  \cf7 5.65e-11\cf2  \cf7 8.89e-07\cf2 \
+\cf7 211577\cf2    \cf7 2006\cf2   \cf4 Mrgprf\cf2   \cf7 5.14\cf2            \cf7 5.15\cf2    \cf7 2.75\cf2  \cf7 1.76e-10\cf2  \cf7 1.38e-06\cf2 \
+\cf7 140474\cf2   \cf7 11281\cf2     \cf4 Muc4\cf2  \cf7 -7.18\cf2           \cf7 -7.34\cf2    \cf7 6.06\cf2  \cf7 3.87e-10\cf2  \cf7 2.03e-06\cf2 \
+\cf7 226101\cf2    \cf7 7094\cf2     \cf4 Myof\cf2   \cf7 2.32\cf2            \cf7 2.32\cf2    \cf7 6.45\cf2  \cf7 9.05e-10\cf2  \cf7 2.71e-06\cf2 \
+\cf7 12740\cf2     \cf7 1812\cf2    \cf4 Cldn4\cf2  \cf7 -5.32\cf2           \cf7 -5.33\cf2    \cf7 9.88\cf2  \cf7 1.17e-09\cf2  \cf7 2.71e-06\cf2 \
+\cf7 21953\cf2      \cf7 667\cf2    \cf4 Tnni2\cf2   \cf7 5.75\cf2            \cf7 5.76\cf2    \cf7 3.86\cf2  \cf7 1.20e-09\cf2  \cf7 2.71e-06\cf2 \
+\cf7 381290\cf2    \cf7 8292\cf2   \cf4 Atp2b4\cf2   \cf7 2.14\cf2            \cf7 2.14\cf2    \cf7 6.15\cf2  \cf7 1.21e-09\cf2  \cf7 2.71e-06\cf2 \
+\cf7 231830\cf2    \cf7 3346\cf2  \cf4 Micall2\cf2  \cf7 -2.25\cf2           \cf7 -2.25\cf2    \cf7 5.19\cf2  \cf7 2.23e-09\cf2  \cf7 4.38e-06\cf2 \
+\cf7 231991\cf2    \cf7 2873\cf2    \cf4 Creb5\cf2   \cf7 2.57\cf2            \cf7 2.57\cf2    \cf7 4.87\cf2  \cf7 3.99e-09\cf2  \cf7 6.97e-06\cf2 \
+\cf7 16012\cf2     \cf7 1289\cf2   \cf4 Igfbp6\cf2   \cf7 2.87\cf2            \cf7 2.87\cf2    \cf7 3.68\cf2  \cf7 5.12e-09\cf2  \cf7 8.05e-06\cf2 \
+\
+\cf4 res.cancer\cf2  <- as.data.frame(\cf4 res.cancer\cf2 )\
+\cf4 res.cancer\cf2 $\cf4 entrez\cf2  <- mapIds(\cf4 org.Hs.eg.db\cf2 , rownames(\cf4 res.cancer\cf2 ),\cf4 keytype\cf2 =\cf6 "SYMBOL"\cf2 , \cf4 column\cf2 =\cf6 "ENTREZID"\cf2 )\
+\
+\cf3 #Set Names of Results Table\
+\cf4 res.cancer\cf2  <- setNames(cbind(rownames(\cf4 res.cancer\cf2 ), \cf4 res.cancer\cf2 , \cf4 row.names\cf2  = \cf5 NULL\cf2 ), c(\cf6 "Gene.symbol"\cf2 ,\cf6 "baseMean"\cf2 , \cf6 "logFC"\cf2 , \cf6 "lfcSE"\cf2 , \cf6 "stat"\cf2 , \cf6 "pvalue"\cf2 , \cf6 "adj.P.Val"\cf2 )) \
+\cf4 res.cancer\cf2  <- setNames(cbind(rownames(\cf4 res.cancer\cf2 ), \cf4 res.cancer\cf2 , \cf4 row.names\cf2  = \cf5 NULL\cf2 ), c(\cf6 "Symbol"\cf2 ,\cf6 "baseMean"\cf2 , \cf6 "logFC"\cf2 , \cf6 "unshrunk.logFC"\cf2 , \cf6 "logCPM"\cf2 , \cf6 "PValue"\cf2 , \cf6 "FDR"\cf2 , \cf6 "entrez"\cf2 )) \
+rownames(\cf4 res.cancer\cf2 ) <- \cf4 res.cancer\cf2 $\cf4 entrez\cf2 \
+\cf4 res.cancer\cf2  <- \cf4 res.cancer\cf2 [,!names(\cf4 res.cancer\cf2 )==\cf6 "entrez"\cf2 ]\
+\cf4 go\cf2  <- goana(\cf4 res.cancer2\cf2 , \cf4 species\cf2 =\cf6 "Hs"\cf2 )\
+\
+\cf3 #Convert Resuts table into a data.frame\
+\cf4 res.cancer\cf2  <- as.data.frame(\cf4 res.cancer\cf2 )\
+\cf3 #Set Names of Results Table\
+\cf4 res.cancer\cf2  <- setNames(cbind(rownames(\cf4 res.cancer\cf2 ), \cf4 res.cancer\cf2 , \cf4 row.names\cf2  = \cf5 NULL\cf2 ), c(\cf6 "Gene.symbol"\cf2 ,\cf6 "baseMean"\cf2 , \cf6 "logFC"\cf2 , \cf6 "lfcSE"\cf2 , \cf6 "stat"\cf2 , \cf6 "pvalue"\cf2 , \cf6 "adj.P.Val"\cf2 )) \
+\
+\cf3 #Get the Read Count of the Genes of interest\
+#decide what genes to save \
+\cf4 genes.to.save\cf2  <-as.character(\cf4 res.cancer\cf2 $\cf4 Gene.symbol\cf2 )\
+\
+\cf3 #from relative table we should get the mean across the row of the otu table\
+\cf4 gene.table.df\cf2  <- data.frame(assay(\cf4 vsd.cancer\cf2 ))\
+\cf4 gene.table.df.meanRA\cf2  <- rowMeans(\cf4 gene.table.df\cf2 )\
+\
+\cf3 #need to subset AND reorder just the otus that we have \
+\cf4 gene.table.df.meanRA.save\cf2  <- \cf4 gene.table.df.meanRA\cf2 [\cf4 genes.to.save\cf2 ]\
+\
+\cf3 #add the abundnace data for the res dataframe\
+\cf4 res.cancer\cf2 $\cf4 abundance\cf2  <- \cf4 gene.table.df.meanRA.save\cf2  \
+\
+\cf3 #Keep only the variables you need for pathway analysis\
+\cf4 res\cf2  <- \cf4 res.cancer\cf2 [,c(\cf6 "Gene.symbol"\cf2 ,\cf6 "logFC"\cf2 ,\cf6 "adj.P.Val"\cf2 )]\
+\cf4 res.2\cf2  <- \cf4 res.cancer\cf2 [,c(\cf6 "Gene.symbol"\cf2 ,\cf6 "logFC"\cf2 ,\cf6 "pvalue"\cf2 ,\cf6 "adj.P.Val"\cf2 )]\
+\
+\cf3 #Write Tables to TXT file\
+\cf2 write.table(\cf4 res\cf2 ,\cf4 file\cf2 =  \cf6 "NSCLC_Advanced_v_Local.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 col.names\cf2  = \cf5 NA\cf2 , \cf4 row.names\cf2  = \cf5 TRUE\cf2 )\
+write.table(\cf4 res.2\cf2 ,\cf4 file\cf2 =\cf6 "NSCLC_Advanced_v_Local_IPA.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 col.names\cf2  = \cf5 NA\cf2 , \cf4 row.names\cf2  = \cf5 TRUE\cf2 , \cf4 quote\cf2 =\cf5 FALSE\cf2 )\
+write.table(\cf4 res\cf2 ,\cf4 file\cf2 =  \cf6 "NSCLC_BPT_v_SPT.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 col.names\cf2  = \cf5 NA\cf2 , \cf4 row.names\cf2  = \cf5 TRUE\cf2 )\
+write.table(\cf4 res.2\cf2 ,\cf4 file\cf2 =\cf6 "NSCLC_BPT_v_SPT_IPA.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 col.names\cf2  = \cf5 NA\cf2 , \cf4 row.names\cf2  = \cf5 TRUE\cf2 , \cf4 quote\cf2 =\cf5 FALSE\cf2 )\
+write.table(\cf4 res\cf2 ,\cf4 file\cf2 =  \cf6 "NSCLC_BPT_v_SPT_2.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 col.names\cf2  = \cf5 NA\cf2 , \cf4 row.names\cf2  = \cf5 TRUE\cf2 )\
+write.table(\cf4 res.2\cf2 ,\cf4 file\cf2 =\cf6 "NSCLC_BPT_v_SPT_IPA_2.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 col.names\cf2  = \cf5 NA\cf2 , \cf4 row.names\cf2  = \cf5 TRUE\cf2 , \cf4 quote\cf2 =\cf5 FALSE\cf2 )\
+\
+\
+write.table(\cf4 res\cf2 ,\cf4 file\cf2 =  \cf6 "NSCLC_Advanced_BPT_v_SPT.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 col.names\cf2  = \cf5 NA\cf2 , \cf4 row.names\cf2  = \cf5 TRUE\cf2 )\
+write.table(\cf4 res.2\cf2 ,\cf4 file\cf2 =\cf6 "NSCLC_Advanced_BPT_v_SPT_IPA.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 col.names\cf2  = \cf5 NA\cf2 , \cf4 row.names\cf2  = \cf5 TRUE\cf2 , \cf4 quote\cf2 =\cf5 FALSE\cf2 )\
+write.table(\cf4 res\cf2 ,\cf4 file\cf2 =  \cf6 "NSCLC_Advanced_BPT_v_SPT_2.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 col.names\cf2  = \cf5 NA\cf2 , \cf4 row.names\cf2  = \cf5 TRUE\cf2 )\
+write.table(\cf4 res.2\cf2 ,\cf4 file\cf2 =\cf6 "NSCLC_Advanced_BPT_v_SPT_IPA_2.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 col.names\cf2  = \cf5 NA\cf2 , \cf4 row.names\cf2  = \cf5 TRUE\cf2 , \cf4 quote\cf2 =\cf5 FALSE\cf2 )\
+\
+write.table(\cf4 res\cf2 ,\cf4 file\cf2 =  \cf6 "NSCLC_Local_BPT_v_SPT.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 col.names\cf2  = \cf5 NA\cf2 , \cf4 row.names\cf2  = \cf5 TRUE\cf2 )\
+write.table(\cf4 res.2\cf2 ,\cf4 file\cf2 =\cf6 "NSCLC_Local_BPT_v_SPT_IPA.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 col.names\cf2  = \cf5 NA\cf2 , \cf4 row.names\cf2  = \cf5 TRUE\cf2 , \cf4 quote\cf2 =\cf5 FALSE\cf2 )\
+\
+write.table(\cf4 avg\cf2 ,\cf4 file\cf2 =  \cf6 "NSCLC_BPT_v_SPT_average_expression.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 col.names\cf2  = \cf5 NA\cf2 , \cf4 row.names\cf2  = \cf5 TRUE\cf2 )\
+write.table(\cf4 cyber\cf2 ,\cf4 file\cf2 =\cf6 "NSCLC_Advanced_v_Local_Cybersort.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 col.names\cf2  = \cf5 NA\cf2 , \cf4 row.names\cf2  = \cf5 TRUE\cf2 , \cf4 quote\cf2 =\cf5 TRUE\cf2 )\
+\
+\cf3 #Run the Pathway Analysis\
+\cf4 lib\cf2  <-c(\cf6 "KEGG"\cf2 , \cf6 "BioCarta"\cf2 , \cf6 "Reactome"\cf2 ,\cf6 "GO-BP"\cf2 , \cf6 "GO-CC"\cf2 , \cf6 "GO-MF"\cf2 )\
+            \cf4 RA_input\cf2  <-read.table(\cf6 "NSCLC_BPT_v_SPT.txt"\cf2 , \cf4 quote\cf2 =\cf6 ""\cf2 , \cf4 comment.char\cf2 =\cf6 ""\cf2 ,\cf4 header\cf2 =\cf5 TRUE\cf2 ,\cf4 row.names\cf2 =\cf7 1\cf2 )\
+            \cf4 RA_input\cf2  <- setNames(cbind(rownames(\cf4 RA_input\cf2 ), \cf4 RA_input\cf2 , \cf4 row.names\cf2  = \cf7 1\cf2 ), c(\cf6 "Gene.symbol"\cf2 , \cf6 "logFC"\cf2 , \cf6 "adj.P.Val"\cf2 ))\
+            \cf4 RA_input\cf2 $\cf4 Gene.symbol\cf2  <- sapply(\cf4 RA_input\cf2 $\cf4 Gene.symbol\cf2 , \cf5 function\cf2 (\cf4 x\cf2 ) gsub(\cf6 "\\""\cf2 , \cf6 ""\cf2 , \cf4 x\cf2 ))\
+            \cf4 RA_exp_mat\cf2  <-read.table(\cf6 "NSCLC_BPT_v_SPT_average_expression.txt"\cf2 , \cf4 comment.char\cf2 =\cf6 ""\cf2 ,\cf4 header\cf2 =\cf5 TRUE\cf2 , \cf4 row.names\cf2 =\cf7 1\cf2 )\
+            \cf4 RA_exp_mat\cf2  <- setNames(cbind(rownames(\cf4 RA_exp_mat\cf2 ), \cf4 RA_exp_mat\cf2 , \cf4 row.names\cf2  = \cf7 1\cf2 ), c(\cf6 "1"\cf2 , \cf6 "2"\cf2 ))\
+            \cf4 merged_mat\cf2  <- cbind(\cf4 RA_exp_mat\cf2 $\cf6 '1'\cf2 , \cf4 RA_exp_mat\cf2 $\cf6 '2'\cf2 )\
+            rownames(\cf4 merged_mat\cf2 ) <- attr(\cf4 RA_exp_mat\cf2 , \cf6 "row.names"\cf2 )\
+            colnames(\cf4 merged_mat\cf2 ) <- c(\cf6 "1"\cf2 , \cf6 "2"\cf2 )\
+            \cf5 for\cf2  (\cf4 i\cf2  \cf5 in\cf2  seq_along(\cf4 lib\cf2 )) \{\
+                \cf4 RA_output\cf2  <- run_pathfindR(\cf4 RA_input\cf2 , \cf4 gene_sets\cf2 =\cf4 lib\cf2 [\cf4 i\cf2 ])\
+                \cf4 RA_clustered\cf2  <- choose_clusters(\cf4 RA_output\cf2 )\
+                \cf3 #RA_clustered <- cluster_pathways(RA_output, method = "fuzzy")\
+\cf2                 \cf3 ## Pathway data frame\
+\cf2                 \cf4 pws_table\cf2  <- \cf4 RA_clustered\cf2 \
+                \cf3 # selecting "Representative" pathways for clear visualization\
+\cf2                 \cf4 pws_table\cf2  <- \cf4 pws_table\cf2 [\cf4 pws_table\cf2 $\cf4 Status\cf2  == \cf6 "Representative"\cf2 , ]\
+                \cf3 # Calculate pw scores and plot heatmap\
+\cf2                 \cf4 pw_scores\cf2  <- calculate_pw_scores(\cf4 RA_clustered\cf2 , \cf4 merged_mat\cf2 , \cf6 "1"\cf2 , \cf4 plot_hmap\cf2 =\cf5 FALSE\cf2 )\
+                \cf4 pw_scores\cf2  <- \cf4 pw_scores\cf2 [complete.cases(\cf4 pw_scores\cf2 ),]\
+                \cf4 merged\cf2  <- as.data.frame(\cf4 pw_scores\cf2 )\
+                \cf4 merged\cf2 $\cf4 Pathway\cf2 <- rownames(\cf4 merged\cf2 )\
+                \cf4 merged\cf2  <- merge(\cf4 RA_clustered\cf2 ,\cf4 merged\cf2 ,\cf4 by\cf2 =\cf6 "Pathway"\cf2 )\
+                write.table(\cf4 pw_scores\cf2 ,\cf4 file\cf2 =paste(\cf6 "NSCLC_BPT_v_SPT_"\cf2 ,\cf4 lib\cf2 [\cf4 i\cf2 ],\cf6 "_Pathway_Scores.txt"\cf2 ,\cf4 sep\cf2 =\cf6 ""\cf2 ), \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 col.names\cf2  = \cf5 NA\cf2 , \cf4 row.names\cf2  = \cf5 TRUE\cf2 )\
+                write.table(\cf4 RA_clustered\cf2 ,\cf4 file\cf2 =paste(\cf6 "NSCLC_BPT_v_SPT_"\cf2 ,\cf4 lib\cf2 [\cf4 i\cf2 ],\cf6 "_Pathway_Table.txt"\cf2 ,\cf4 sep\cf2 =\cf6 ""\cf2 ), \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 col.names\cf2  = \cf5 NA\cf2 , \cf4 row.names\cf2  = \cf5 TRUE\cf2 )\
+                write.table(\cf4 merged\cf2 ,\cf4 file\cf2 =paste(\cf6 "NSCLC_BPT_v_SPT_"\cf2 ,\cf4 lib\cf2 [\cf4 i\cf2 ],\cf6 "_Pathway_Table_and_Scores.txt"\cf2 ,\cf4 sep\cf2 =\cf6 ""\cf2 ), \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 col.names\cf2  = \cf5 NA\cf2 , \cf4 row.names\cf2  = \cf5 TRUE\cf2 )\
+                pdf(paste(\cf6 "NSCLC_BPT_v_SPT_"\cf2 ,\cf4 lib\cf2 [\cf4 i\cf2 ],\cf6 "_Pathways.pdf"\cf2 ,\cf4 sep\cf2 =\cf6 ""\cf2 ), \cf4 height\cf2  = \cf7 10\cf2 , \cf4 width\cf2  = \cf7 10\cf2 )\
+                    pheatmap(\cf4 pw_scores\cf2 , \cf4 labels_col\cf2  = c(\cf6 "Cluster 1 (BPT)"\cf2 , \cf6 "Cluster 2 (SPT)"\cf2 ), \cf4 fontsize_row\cf2 =\cf7 8\cf2 , \cf4 cellwidth\cf2 =\cf7 10\cf2 , \cf4 fontsize_col\cf2 =\cf7 8\cf2 )\
+                dev.off()\
+            \}\
+\
+\cf3 #=========================================================\
+\cf2 ////////////////////\cf4 VOLCANO\cf2  \cf4 PLOT\cf2 ///////////////////////\
+\cf3 #=========================================================\
+# Compute significance, with a maximum of 320 for the p-values set to 0 due to limitation of computation precision\
+\cf4 res.cancer\cf2 $\cf4 sig\cf2  <- -log10(\cf4 res.cancer\cf2 $\cf4 adj.P.Val\cf2 )\
+sum(is.infinite(\cf4 res.cancer\cf2 $\cf4 sig\cf2 ))\
+\
+\cf4 res.cancer\cf2 [is.infinite(\cf4 res.cancer\cf2 $\cf4 sig\cf2 ),\cf6 "sig"\cf2 ] <- \cf7 350\cf2 \
+\
+\cf3 # Select genes with a defined p-value (DESeq2 assigns NA to some genes)\
+\cf4 genes.to.plot\cf2  <- !is.na(\cf4 res.cancer\cf2 $\cf4 pvalue\cf2 )\
+\
+\cf3 # sum(genes.to.plot)\
+\cf2 range(\cf4 res.cancer\cf2 [\cf4 genes.to.plot\cf2 , \cf6 "logFC"\cf2 ])\
+\
+\cf3 ## Volcano plot of adjusted p-values\
+\cf4 cols\cf2  <- densCols(\cf4 res.cancer\cf2 $\cf4 logFC\cf2 , \cf4 res.cancer\cf2 $\cf4 sig\cf2 )\
+\cf4 cols\cf2 [\cf4 res.cancer\cf2 $\cf4 pvalue\cf2  ==\cf7 0\cf2 ] <- \cf6 "purple"\cf2 \
+\cf4 cols\cf2 [\cf4 res.cancer\cf2 $\cf4 logFC\cf2  > \cf7 0\cf2  & \cf4 res.cancer\cf2 $\cf4 adj.P.Val\cf2  < \cf4 alpha\cf2  ] <- \cf6 "red"\cf2 \
+\cf4 cols\cf2 [\cf4 res.cancer\cf2 $\cf4 logFC\cf2  < \cf7 0\cf2  & \cf4 res.cancer\cf2 $\cf4 adj.P.Val\cf2  < \cf4 alpha\cf2  ] <- \cf6 "green"\cf2 \
+\cf4 res.cancer\cf2 $\cf4 pch\cf2  <- \cf7 19\cf2 \
+\cf4 res.cancer\cf2 $\cf4 pch\cf2 [\cf4 res.cancer\cf2 $\cf4 pvalue\cf2  ==\cf7 0\cf2 ] <- \cf7 6\cf2 \
+\
+\cf4 gn.selected\cf2  <- abs(\cf4 res.cancer\cf2 $\cf4 logFC\cf2 ) > \cf7 2\cf2  & \cf4 res.cancer\cf2 $\cf4 adj.P.Val\cf2  < \cf4 alpha\cf2  \
+\
+\
+\
+\
+pdf(\cf4 file\cf2 =\cf6 "NSCLC_Advanced_v_Local_FDR_0.25_Volcano_Plot_Gene_Size.pdf"\cf2 , \cf4 width\cf2 =\cf7 7\cf2 , \cf4 height\cf2 =\cf7 9\cf2 )\
+    ggplot(\cf4 res.cancer\cf2 , aes(\cf4 x\cf2  = \cf4 logFC\cf2 , \cf4 y\cf2  = \cf4 sig\cf2 ,\cf4 label\cf2 =\cf4 Gene.symbol\cf2 )) +\
+    geom_point(\cf4 color\cf2 =\cf4 cols\cf2 , \cf4 size\cf2  = ifelse(\cf4 res.cancer\cf2 $\cf4 adj.P.Val\cf2  < \cf4 alpha\cf2 , \cf4 res.cancer\cf2 $\cf4 abundance\cf2 , \cf7 2\cf2 ), \cf4 alpha\cf2 =\cf7 0.5\cf2 ) + \cf3 #Chose Colors and size for dots\
+\cf2     geom_text_repel(aes(\cf4 label\cf2 =ifelse(\cf4 res.cancer\cf2 $\cf4 logFC\cf2 >\cf7 2\cf2  & \cf4 res.cancer\cf2 $\cf4 adj.P.Val\cf2  < \cf4 alpha\cf2  , as.character(\cf4 res.cancer\cf2 $\cf4 Gene.symbol\cf2 ),\cf6 ''\cf2 )),\cf4 size\cf2 =\cf7 4.5\cf2 ,\cf4 force\cf2 =\cf7 25\cf2 , \cf4 segment.colour\cf2 =\cf6 "grey"\cf2 ) + \cf3 #Label values based on parameters, including pcal and logFC\
+\cf2     geom_hline(\cf4 yintercept\cf2 =-log10(\cf4 alpha\cf2 ), \cf4 color\cf2 =\cf6 "red"\cf2 ,\cf4 linetype\cf2 =\cf6 "dashed"\cf2 ) + \cf3 #Create Reference line for FDR\
+\cf2     xlab(\cf6 "Effect size: log2(fold-change)"\cf2 ) + \cf3 #label X Axis\
+\cf2     ylab(\cf6 "-log10(adjusted p-value)"\cf2 ) + \cf3 #label Y Axis\
+\cf2     \cf4 theme\cf2  \cf3 #Set Theme\
+\cf2 dev.off() \
+\
+\
+\
+\cf4 theme2\cf2 <-theme(\cf4 panel.background\cf2  = element_blank(),\cf4 panel.border\cf2 =element_rect(\cf4 fill\cf2 =\cf5 NA\cf2 ),\
+    \cf4 panel.grid.major\cf2  = element_blank(),\cf4 panel.grid.minor\cf2  = element_blank(),\
+    \cf4 strip.background\cf2 =element_blank(),\cf4 axis.text.x\cf2 =element_text(\cf4 colour\cf2 =\cf6 "black"\cf2 ),\
+    \cf4 axis.text.y\cf2 =element_text(\cf4 colour\cf2 =\cf6 "black"\cf2 ),\cf4 axis.ticks\cf2 =element_line(\cf4 colour\cf2 =\cf6 "black"\cf2 ),\cf4 axis.title\cf2 =element_text(\cf4 size\cf2 =\cf7 20\cf2 ,\cf4 face\cf2 =\cf6 "bold"\cf2 ),\
+    \cf4 plot.margin\cf2 =unit(c(\cf7 1\cf2 ,\cf7 1\cf2 ,\cf7 1\cf2 ,\cf7 1\cf2 ),\cf6 "line"\cf2 ),\cf4 axis.text\cf2 =element_text(\cf4 size\cf2 =\cf7 15\cf2 ),\cf4 strip.text\cf2  = element_text(\cf4 size\cf2 =\cf7 50\cf2 ,\cf4 face\cf2 =\cf6 "bold"\cf2 ),\
+    \cf4 legend.key\cf2 =element_rect(\cf4 fill\cf2 =\cf6 'white'\cf2 ))\
+\
+pdf(\cf4 file\cf2 =\cf6 "NSCLC_SPT_V_BPT_FDR_0.25_Volcano_Plot_Gene_Sizes.pdf"\cf2 , \cf4 width\cf2 =\cf7 9\cf2 , \cf4 height\cf2 =\cf7 11\cf2 )\
+    ggplot(\cf4 res.cancer\cf2 , aes(\cf4 x\cf2  = \cf4 logFC\cf2 , \cf4 y\cf2  = \cf4 sig\cf2 ,\cf4 label\cf2 =\cf4 Gene.symbol\cf2 )) +\
+    \cf3 #geom_point(aes(size=ifelse(adj.P.Val < alpha, 10*abundance, 2)),color=cols, alpha=0.5) + #Chose Colors and size for dots\
+\cf2     geom_point(\cf4 color\cf2 =\cf4 cols\cf2 , \cf4 size\cf2  = ifelse(\cf4 res.cancer\cf2 $\cf4 adj.P.Val\cf2  < \cf4 alpha\cf2 , \cf4 res.cancer\cf2 $\cf4 abundance\cf2 , \cf7 2\cf2 ), \cf4 alpha\cf2 =\cf7 0.5\cf2 , \cf4 show.legend\cf2 =\cf5 T\cf2 ) + \cf3 #Chose Colors and size for dots\
+\cf2     geom_text_repel(aes(\cf4 label\cf2 =ifelse(\cf4 res.cancer\cf2 $\cf4 logFC\cf2 >\cf7 2\cf2  & \cf4 res.cancer\cf2 $\cf4 adj.P.Val\cf2  < \cf4 alpha\cf2  , as.character(\cf4 res.cancer\cf2 $\cf4 Gene.symbol\cf2 ),\cf6 ''\cf2 )),\cf4 size\cf2 =\cf7 4.5\cf2 ,\cf4 force\cf2 =\cf7 25\cf2 , \cf4 segment.colour\cf2 =\cf6 "grey"\cf2 ) + \cf3 #Label values based on parameters, including pcal and logFC\
+\cf2     geom_hline(\cf4 yintercept\cf2 =-log10(\cf4 alpha\cf2 ), \cf4 color\cf2 =\cf6 "red"\cf2 ,\cf4 linetype\cf2 =\cf6 "dashed"\cf2 ) + \cf3 #Create Reference line for FDR\
+\cf2     xlab(\cf6 "Effect size: log2(fold-change)"\cf2 ) + \cf3 #label X Axis\
+\cf2     ylab(\cf6 "-log10(adjusted p-value)"\cf2 )+  \cf3 #label Y Axis\
+\cf2     \cf3 #scale_size(name   = "Variance Stabalized Reads",\
+\cf2     \cf3 #         breaks = round(fivenum(res.cancer$abundance)*2,1),\
+\cf2     \cf3 #         labels = round(fivenum(res.cancer$abundance),1),\
+\cf2     \cf3 #         guide=guide_legend(override.aes = list(colour = "red")))+\
+\cf2     scale_size_manual(\cf4 name\cf2  =\cf6 "Variance Stabalized Reads"\cf2 ,\cf4 values\cf2 =\cf4 res.cancer\cf2 $\cf4 abundance\cf2 , \cf4 guide\cf2 =guide_legend(\cf4 override.aes\cf2  = list(\cf4 colour\cf2  = \cf6 "red"\cf2 )))\
+    guides(\cf4 size\cf2 =guide_legend(\cf4 override.aes\cf2  = list(\cf4 size\cf2  = c(\cf7 3\cf2 , \cf7 3\cf2 , \cf7 5\cf2 ))))+\
+    \cf4 theme2\cf2  \cf3 #Set Theme\
+\cf2 dev.off() \
+\
+\
+pdf(\cf4 file\cf2 =\cf6 "NSCLC_SPT_V_BPT_FDR_0.25_Volcano_Plot_Gene_Sizess.pdf"\cf2 , \cf4 width\cf2 =\cf7 7\cf2 , \cf4 height\cf2 =\cf7 9\cf2 )\
+    ggplot(\cf4 res.cancer\cf2 , aes(\cf4 x\cf2  = \cf4 logFC\cf2 , \cf4 y\cf2  = \cf4 sig\cf2 ,\cf4 label\cf2 =\cf4 Gene.symbol\cf2 , \cf4 size\cf2 =ifelse(\cf4 adj.P.Val\cf2  < \cf4 alpha\cf2 , \cf7 2\cf2 *\cf4 abundance\cf2 , \cf7 2\cf2 ))) +\
+    \cf3 #ggplot(res.cancer, aes(x = logFC, y = sig,label=Gene.symbol)) +\
+\cf2     geom_point(\cf4 color\cf2 =\cf4 cols\cf2 , \cf4 alpha\cf2 =\cf7 0.5\cf2 ) + \cf3 #Chose Colors and size for dots\
+\cf2     \cf3 #geom_point(color=cols, size = ifelse(res.cancer$adj.P.Val < alpha, res.cancer$abundance, 2), alpha=0.5) + #Chose Colors and size for dots\
+\cf2     geom_text_repel(aes(\cf4 label\cf2 =ifelse(\cf4 res.cancer\cf2 $\cf4 logFC\cf2 >\cf7 2\cf2  & \cf4 res.cancer\cf2 $\cf4 adj.P.Val\cf2  < \cf4 alpha\cf2  , as.character(\cf4 res.cancer\cf2 $\cf4 Gene.symbol\cf2 ),\cf6 ''\cf2 )),\cf4 size\cf2 =\cf7 4.5\cf2 ,\cf4 force\cf2 =\cf7 25\cf2 , \cf4 segment.colour\cf2 =\cf6 "grey"\cf2 ) + \cf3 #Label values based on parameters, including pcal and logFC\
+\cf2     geom_hline(\cf4 yintercept\cf2 =-log10(\cf4 alpha\cf2 ), \cf4 color\cf2 =\cf6 "red"\cf2 ,\cf4 linetype\cf2 =\cf6 "dashed"\cf2 ) + \cf3 #Create Reference line for FDR\
+\cf2     xlab(\cf6 "Effect size: log2(fold-change)"\cf2 ) + \cf3 #label X Axis\
+\cf2     ylab(\cf6 "-log10(adjusted p-value)"\cf2 ) + \cf3 #label Y Axis\
+\cf2     \cf3 #guides(size=guide_legend())\
+\cf2     \cf4 theme2\cf2  \cf3 #Set Theme\
+\cf2 dev.off() \
+\
+\
+\cf4 LOC644936\cf2  == \cf7 8.305325\cf2 \
+\cf4 PPBP\cf2  = \cf7 4.997782\cf2 \
+\
+pdf(\cf4 file\cf2 =\cf6 "NSCLC_Advanced_BPT_v_SPT_FDR_0.25_Volcano_Plot_Gene_Size.pdf"\cf2 , \cf4 width\cf2 =\cf7 7\cf2 , \cf4 height\cf2 =\cf7 9\cf2 )\
+    ggplot(\cf4 res.cancer\cf2 , aes(\cf4 x\cf2  = \cf4 logFC\cf2 , \cf4 y\cf2  = \cf4 sig\cf2 ,\cf4 label\cf2 =\cf4 Gene.symbol\cf2 )) +\
+    geom_point(\cf4 color\cf2 =\cf4 cols\cf2 , \cf4 size\cf2  = ifelse(\cf4 res.cancer\cf2 $\cf4 adj.P.Val\cf2  < \cf4 alpha\cf2 , \cf4 res.cancer\cf2 $\cf4 abundance\cf2 , \cf7 2\cf2 ), \cf4 alpha\cf2 =\cf7 0.5\cf2 ) + \cf3 #Chose Colors and size for dots\
+\cf2     geom_text_repel(aes(\cf4 label\cf2 =ifelse(\cf4 res.cancer\cf2 $\cf4 logFC\cf2 >\cf7 2\cf2  & \cf4 res.cancer\cf2 $\cf4 adj.P.Val\cf2  < \cf4 alpha\cf2  , as.character(\cf4 res.cancer\cf2 $\cf4 Gene.symbol\cf2 ),\cf6 ''\cf2 )),\cf4 size\cf2 =\cf7 4.5\cf2 ,\cf4 force\cf2 =\cf7 25\cf2 , \cf4 segment.colour\cf2 =\cf6 "grey"\cf2 ) + \cf3 #Label values based on parameters, including pcal and logFC\
+\cf2     geom_hline(\cf4 yintercept\cf2 =-log10(\cf4 alpha\cf2 ), \cf4 color\cf2 =\cf6 "red"\cf2 ,\cf4 linetype\cf2 =\cf6 "dashed"\cf2 ) + \cf3 #Create Reference line for FDR\
+\cf2     xlab(\cf6 "Effect size: log2(fold-change)"\cf2 ) + \cf3 #label X Axis\
+\cf2     ylab(\cf6 "-log10(adjusted p-value)"\cf2 ) + \cf3 #label Y Axis\
+\cf2     \cf4 theme\cf2  \cf3 #Set Theme\
+\cf2 dev.off() \
+\
+\
+pdf(\cf4 file\cf2 =\cf6 "NSCLC_Local_BPT_v_SPT_FDR_0.25_Volcano_Plot_Gene_Size.pdf"\cf2 , \cf4 width\cf2 =\cf7 7\cf2 , \cf4 height\cf2 =\cf7 9\cf2 )\
+    ggplot(\cf4 res.cancer\cf2 , aes(\cf4 x\cf2  = \cf4 logFC\cf2 , \cf4 y\cf2  = \cf4 sig\cf2 ,\cf4 label\cf2 =\cf4 Gene.symbol\cf2 )) +\
+    geom_point(\cf4 color\cf2 =\cf4 cols\cf2 , \cf4 size\cf2  = ifelse(\cf4 res.cancer\cf2 $\cf4 adj.P.Val\cf2  < \cf4 alpha\cf2 , \cf4 res.cancer\cf2 $\cf4 abundance\cf2 , \cf7 2\cf2 ), \cf4 alpha\cf2 =\cf7 0.5\cf2 ) + \cf3 #Chose Colors and size for dots\
+\cf2     geom_text_repel(aes(\cf4 label\cf2 =ifelse(\cf4 res.cancer\cf2 $\cf4 logFC\cf2 >\cf7 1\cf2  & \cf4 res.cancer\cf2 $\cf4 adj.P.Val\cf2  < \cf4 alpha\cf2  , as.character(\cf4 res.cancer\cf2 $\cf4 Gene.symbol\cf2 ),\cf6 ''\cf2 )),\cf4 size\cf2 =\cf7 4.5\cf2 ,\cf4 force\cf2 =\cf7 25\cf2 , \cf4 segment.colour\cf2 =\cf6 "grey"\cf2 ) + \cf3 #Label values based on parameters, including pcal and logFC\
+\cf2     geom_hline(\cf4 yintercept\cf2 =-log10(\cf4 alpha\cf2 ), \cf4 color\cf2 =\cf6 "red"\cf2 ,\cf4 linetype\cf2 =\cf6 "dashed"\cf2 ) + \cf3 #Create Reference line for FDR\
+\cf2     xlab(\cf6 "Effect size: log2(fold-change)"\cf2 ) + \cf3 #label X Axis\
+\cf2     ylab(\cf6 "-log10(adjusted p-value)"\cf2 ) + \cf3 #label Y Axis\
+\cf2     \cf4 theme\cf2  \cf3 #Set Theme\
+\cf2 dev.off() \
+\
+\
+\
+\cf3 #=========================================================\
+\cf2 ////////////////////\cf4 KO\cf2  \cf4 ANNOTATION\cf2 ///////////////////////\
+\cf3 #=========================================================\
+#HUMAN DATA\
+#Load Human Library\
+\cf2 library(\cf4 org.Hs.eg.db\cf2 )\
+\
+\cf3 ##Get the Entrez gene IDs associated with those symbols\
+\cf4 res\cf2 $\cf4 EID\cf2  = mget(as.character(\cf4 res\cf2 $\cf4 Gene.symbol\cf2 ), revmap(\cf4 org.Hs.egSYMBOL\cf2 ),\cf4 ifnotfound\cf2 =\cf5 NA\cf2 )\
+\
+\cf3 ##Then get the KEGG IDs associated with those entrez genes.\
+\cf4 res\cf2 $\cf4 KO_Number\cf2  = mget(as.character(\cf4 res\cf2 $\cf4 EID\cf2 ), \cf4 org.Hs.egPATH\cf2 ,\cf4 ifnotfound\cf2 =\cf5 NA\cf2 )\
+\
+\cf3 #Create a row for each KO and Gene Combination\
+\cf2 library(\cf4 splitstackshape\cf2 )\
+\cf4 res\cf2  <- cSplit(as.data.table(\cf4 res\cf2 )[, \cf4 KO_Number\cf2  := gsub(\cf6 "[][\\"]"\cf2 , \cf6 ""\cf2 , \cf4 KO_Number\cf2 )], \
+       \cf6 "KO_Number"\cf2 , \cf6 ","\cf2 , \cf6 "long"\cf2 )\
+\
+\cf3 #Remove the c(\
+\cf4 res\cf2 [] <- lapply(\cf4 res\cf2 , \cf4 gsub\cf2 , \cf4 pattern\cf2 =\cf6 'c\\\\('\cf2 , \cf4 replacement\cf2 =\cf6 ''\cf2 )\
+\cf3 #Remove the )\
+\cf4 res\cf2 [] <- lapply(\cf4 res\cf2 , \cf4 gsub\cf2 , \cf4 pattern\cf2 =\cf6 ')'\cf2 , \cf4 replacement\cf2 =\cf6 ''\cf2 )\
+\cf3 #Make sure NA is NA\
+\cf4 res\cf2 [\cf4 res\cf2 ==\cf6 "NA"\cf2 ] <- \cf5 NA\cf2 \
+\cf3 #Put a K before the KO Number\
+\cf4 res\cf2 $\cf4 KO_Number\cf2  <- ifelse(is.na(\cf4 res\cf2 $\cf4 KO_Number\cf2 ),\cf4 res\cf2 $\cf4 KO_Number\cf2 ,paste0(\cf6 "K"\cf2 , \cf4 res\cf2 $\cf4 KO_Number\cf2 ))\
+\cf3 #Remove WhiteSpace\
+\cf4 res\cf2 $\cf4 KO_Number\cf2  <- gsub( \cf6 " "\cf2 , \cf6 ""\cf2 , \cf4 res\cf2 $\cf4 KO_Number\cf2 )\
+\
+\cf3 #Create new data frame to run the pathway analysis\
+\cf4 results\cf2  <- \cf4 res\cf2 \
+\cf3 #Asign Hierarchy to KO Number\
+\cf4 results\cf2  <- assign_hierarchy(\cf4 count_data\cf2 =\cf4 results\cf2 , \cf4 keep_unknowns\cf2 =\cf5 TRUE\cf2 , \cf4 identifier\cf2 =\cf6 "KO_Number"\cf2 )\
+\cf3 #Remove Number from Subclass\
+\cf4 results\cf2 $\cf4 KO_Subclass_2\cf2  <- gsub(\cf6 '[[:digit:]]+'\cf2 , \cf6 ''\cf2 , \cf4 results\cf2 $\cf4 KO_Subclass_2\cf2  )\
+\cf3 #Remove Path Number from Subclass\
+\cf4 results\cf2 $\cf4 KO_Subclass_2\cf2  <- gsub(\cf6 "\\\\s*\\\\[[^\\\\)]+\\\\]"\cf2 ,\cf6 ""\cf2 ,\cf4 results\cf2 $\cf4 KO_Subclass_2\cf2 )\
+\
+\cf3 #Keep only significant Data FDR < 0.01\
+\cf4 data\cf2  <- \cf4 results\cf2 [\cf4 results\cf2 $\cf4 adj.P.Val\cf2  < \cf7 0.2\cf2 ,] \
+\cf3 #Remove NAs\
+\cf4 data\cf2  <- \cf4 data\cf2 [!is.na(\cf4 data\cf2 $\cf4 KO_Subclass_2\cf2 ),]\
+\cf3 #Calculate Median IQR and N of Padg\
+\cf4 data\cf2  <- setDT(\cf4 data\cf2 )[,list(\cf4 Number\cf2 =\cf4 .N\cf2 ,\cf4 medianfc\cf2 =median(as.numeric(\cf4 logFC\cf2 )), \cf4 median\cf2 =median(as.numeric(\cf4 adj.P.Val\cf2 )), \cf4 iqr\cf2 =quantile(as.numeric(\cf4 adj.P.Val\cf2 )), \cf4 probs\cf2 =\cf4 .75\cf2 ), \cf4 by\cf2 =c(\cf6 "KO_Subclass_2"\cf2 )]\
+\
+\cf4 data\cf2 $\cf4 sig\cf2  <- -log10(\cf4 data\cf2 $\cf4 median\cf2 )\
+sum(is.infinite(\cf4 data\cf2 $\cf4 sig\cf2 ))\
+\
+\cf4 data\cf2 $\cf4 bb\cf2  <- ifelse(\cf4 data\cf2 $\cf4 sig\cf2 >\cf7 10\cf2 , \cf7 1\cf2 , \cf7 2\cf2 )\
+\cf4 data\cf2 $\cf4 sig\cf2  <- ifelse(\cf4 data\cf2 $\cf4 sig\cf2 >\cf7 10\cf2 ,\cf7 10\cf2 ,\cf4 data\cf2 $\cf4 sig\cf2 )\
+\
+\
+\cf3 #Plot Figure\
+\cf2 pdf(\cf6 "NSCLC_Transcriptome_SPT_vs_BPT_Bubble_Chart.pdf"\cf2 , \cf4 height\cf2  = \cf7 10\cf2 , \cf4 width\cf2  = \cf7 10\cf2 )\
+ggplot(\cf4 data\cf2 , aes(\cf4 x\cf2 =\cf4 sig\cf2 , \cf4 y\cf2 =reorder(\cf4 KO_Subclass_2\cf2 , +\cf4 sig\cf2 ), \cf4 size\cf2 =\cf4 Number\cf2 , \cf4 color\cf2 =\cf4 medianfc\cf2 )) +\
+    geom_point(\cf4 alpha\cf2 =\cf7 0.2\cf2 )+\
+    scale_size_continuous(\cf4 range\cf2 =c(\cf7 1\cf2 , \cf7 27\cf2 ))+\
+    \cf3 #scale_x_reverse()+ #Flip x axis so it goes from least significant to most\
+\cf2     scale_colour_gradient(\cf4 low\cf2 =\cf6 "blue"\cf2 , \cf4 high\cf2 =\cf6 "red"\cf2 )+ \cf3 #Set Color for gradient\
+\cf2     theme(\cf4 panel.background\cf2  = element_blank(),\
+        \cf4 panel.border\cf2 =element_rect(\cf4 fill\cf2 =\cf5 NA\cf2 ),\
+        \cf4 panel.grid.major\cf2  = element_blank(),\
+        \cf4 panel.grid.minor\cf2  = element_blank(),\
+        \cf4 strip.background\cf2 =element_blank(),\
+        \cf4 axis.text.x\cf2 =element_text(\cf4 colour\cf2 =\cf6 "black"\cf2 ),\
+        \cf4 axis.text.y\cf2 =element_text(\cf4 colour\cf2 =\cf6 "black"\cf2 ),\
+        \cf4 axis.ticks\cf2 =element_line(\cf4 colour\cf2 =\cf6 "black"\cf2 ),\
+        \cf4 plot.margin\cf2 =unit(c(\cf7 1\cf2 ,\cf7 1\cf2 ,\cf7 1\cf2 ,\cf7 1\cf2 ),\cf6 "line"\cf2 ),\
+        \cf4 legend.position\cf2  = c(\cf4 .95\cf2 , \cf4 .05\cf2 ),\
+        \cf4 legend.justification\cf2  = c(\cf6 "right"\cf2 , \cf6 "bottom"\cf2 ))+\
+    \cf3 #facet_grid(bb ~ .)+\
+\cf2     \cf3 #scale_colour_continuous(guide = FALSE)\
+\cf2     \cf3 #scale_x_continuous(limits=c(0,NA),expand=c(0,0),breaks=c(0,45:60), labels=c(0,45:60))+\
+\cf2     \cf3 #annotate(geom = "segment", x = -Inf, xend = -Inf, y = -Inf, yend = Inf)+\
+\cf2     xlab(\cf6 "Median -Log Adj P Value"\cf2 ) +\
+    ylab(\cf6 "KEGG Pathway"\cf2 )+\
+    labs( \cf4 size\cf2  = \cf6 "Number of KOs"\cf2 , \cf4 color\cf2 =\cf6 "Median Log Fold Change"\cf2  ) +\
+    theme_bw()\
+dev.off()\
+\
+\cf4 a\cf2 <-read.table(\cf6 "Cancer_vs_LC_Veillonella_IPA.txt"\cf2 , \cf4 header\cf2 =\cf5 T\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 , \cf4 row.names\cf2 =\cf7 1\cf2 )\
+\
+\cf3 #MOUSE DATA\
+#Load Mouse Library\
+\cf2 library(\cf4 org.Mm.eg.db\cf2 )\
+\
+\cf3 ##Get the Entrez gene IDs associated with those symbols\
+\cf4 a\cf2 $\cf4 EID\cf2  = mget(as.character(\cf4 a\cf2 $\cf4 Gene.symbol\cf2 ), revmap(\cf4 org.Mm.egSYMBOL\cf2 ),\cf4 ifnotfound\cf2 =\cf5 NA\cf2 )\
+\
+\cf3 ##Then get the KEGG IDs associated with those entrez genes.\
+\cf4 a\cf2 $\cf4 KO_Number\cf2  = mget(as.character(\cf4 a\cf2 $\cf4 EID\cf2 ), \cf4 org.Mm.egPATH\cf2 ,\cf4 ifnotfound\cf2 =\cf5 NA\cf2 )\
+\
+\cf3 #Create a row for each KO and Gene Combination\
+\cf2 library(\cf4 splitstackshape\cf2 )\
+\cf4 a\cf2  <- cSplit(as.data.table(\cf4 a\cf2 )[, \cf4 KO_Number\cf2  := gsub(\cf6 "[][\\"]"\cf2 , \cf6 ""\cf2 , \cf4 KO_Number\cf2 )], \
+       \cf6 "KO_Number"\cf2 , \cf6 ","\cf2 , \cf6 "long"\cf2 )\
+\
+\cf3 #Remove the c(\
+\cf4 a\cf2 [] <- lapply(\cf4 a\cf2 , \cf4 gsub\cf2 , \cf4 pattern\cf2 =\cf6 'c\\\\('\cf2 , \cf4 replacement\cf2 =\cf6 ''\cf2 )\
+\cf3 #Remove the )\
+\cf4 a\cf2 [] <- lapply(\cf4 a\cf2 , \cf4 gsub\cf2 , \cf4 pattern\cf2 =\cf6 ')'\cf2 , \cf4 replacement\cf2 =\cf6 ''\cf2 )\
+\cf3 #Make sure NA is NA\
+\cf4 a\cf2 [\cf4 a\cf2 ==\cf6 "NA"\cf2 ] <- \cf5 NA\cf2 \
+\cf3 #Put a K before the KO Number\
+\cf4 a\cf2 $\cf4 KO_Number\cf2  <- ifelse(is.na(\cf4 a\cf2 $\cf4 KO_Number\cf2 ),\cf4 a\cf2 $\cf4 KO_Number\cf2 ,paste0(\cf6 "K"\cf2 , \cf4 a\cf2 $\cf4 KO_Number\cf2 ))\
+\cf3 #Remove WhiteSpace\
+\cf4 a\cf2 $\cf4 KO_Number\cf2  <- gsub( \cf6 " "\cf2 , \cf6 ""\cf2 , \cf4 a\cf2 $\cf4 KO_Number\cf2 )\
+\
+\cf3 #Asign Hierarchy to KO Number\
+\cf4 a\cf2  <- assign_hierarchy(\cf4 count_data\cf2 =\cf4 a\cf2 , \cf4 keep_unknowns\cf2 =\cf5 TRUE\cf2 , \cf4 identifier\cf2 =\cf6 "KO_Number"\cf2 )\
+\cf3 #Remove Number from Subclass\
+\cf4 a\cf2 $\cf4 KO_Subclass_2\cf2  <- gsub(\cf6 '[[:digit:]]+'\cf2 , \cf6 ''\cf2 , \cf4 a\cf2 $\cf4 KO_Subclass_2\cf2  )\
+\cf3 #Remove Path Number from Subclass\
+\cf4 a\cf2 $\cf4 KO_Subclass_2\cf2  <- gsub(\cf6 "\\\\s*\\\\[[^\\\\)]+\\\\]"\cf2 ,\cf6 ""\cf2 ,\cf4 a\cf2 $\cf4 KO_Subclass_2\cf2 )\
+\
+\cf4 a\cf2  <- setDT(\cf4 a\cf2 )[,list(\cf4 Number\cf2 =\cf4 .N\cf2 ,\cf4 medianfc\cf2 =median(as.numeric(\cf4 logFC\cf2 )), \cf4 median\cf2 =median(as.numeric(\cf4 adj.P.Val\cf2 )), \cf4 iqr\cf2 =quantile(as.numeric(\cf4 adj.P.Val\cf2 )), \cf4 probs\cf2 =\cf4 .75\cf2 ), \cf4 by\cf2 =c(\cf6 "KO_Subclass_2"\cf2 )]\
+}

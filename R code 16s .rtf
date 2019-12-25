@@ -1,0 +1,378 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1561\cocoasubrtf100
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 Monaco;}
+{\colortbl;\red255\green255\blue255;\red62\green62\blue62;\red6\green0\blue135;\red0\green0\blue0;
+\red158\green0\blue3;\red181\green118\blue12;\red11\green66\blue19;}
+{\*\expandedcolortbl;;\cssrgb\c31200\c30900\c30900;\cssrgb\c2500\c8500\c60000;\cssrgb\c0\c0\c0;
+\cssrgb\c69000\c7500\c0;\cssrgb\c76500\c53500\c3500;\cssrgb\c2000\c32000\c9500;}
+\margl1440\margr1440\vieww17800\viewh13420\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 ######################16s microbiome Deseq  (alpha + Beta Diversity + volcano plots) (Figure 1, supp Figure 3, 4, 5, 6, 7##############\
+\
+\pard\tx528\tx1056\tx1584\tx2112\tx2640\tx3168\tx3696\tx4224\tx4752\tx5280\tx5808\tx6337\tx6865\tx7393\tx7921\tx8449\tx8977\tx9505\tx10033\tx10561\tx11089\tx11617\tx12145\tx12674\tx13202\tx13730\tx14258\tx14786\tx15314\tx15842\tx16370\tx16898\tx17426\tx17954\tx18483\tx19011\tx19539\tx20067\tx20595\tx21123\tx21651\tx22179\tx22707\tx23235\tx23763\tx24291\tx24820\tx25348\tx25876\tx26404\tx26932\tx27460\tx27988\tx28516\tx29044\tx29572\tx30100\tx30628\tx31157\tx31685\tx32213\tx32741\tx33269\tx33797\li80\fi-80\pardirnatural\partightenfactor0
+
+\f1\fs22 \cf2 #Load Packages
+\f0\fs24 \cf0 \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f1\fs22 \cf3 library(\cf4 DESeq2\cf3 )\
+\pard\tx528\tx1056\tx1584\tx2112\tx2640\tx3168\tx3696\tx4224\tx4752\tx5280\tx5808\tx6337\tx6865\tx7393\tx7921\tx8449\tx8977\tx9505\tx10033\tx10561\tx11089\tx11617\tx12145\tx12674\tx13202\tx13730\tx14258\tx14786\tx15314\tx15842\tx16370\tx16898\tx17426\tx17954\tx18483\tx19011\tx19539\tx20067\tx20595\tx21123\tx21651\tx22179\tx22707\tx23235\tx23763\tx24291\tx24820\tx25348\tx25876\tx26404\tx26932\tx27460\tx27988\tx28516\tx29044\tx29572\tx30100\tx30628\tx31157\tx31685\tx32213\tx32741\tx33269\tx33797\li80\fi-80\pardirnatural\partightenfactor0
+\cf3 library(\cf4 edgeR\cf3 )\
+library(\cf4 limma\cf3 )\
+library(\cf4 Glimma\cf3 )\
+library(\cf4 gplots\cf3 )\
+library(\cf4 RColorBrewer\cf3 )\
+library(\cf4 pheatmap\cf3 )\
+library(\cf4 ggplot2\cf3 )\
+library(\cf4 ggrepel\cf3 )\
+library(\cf4 pathfindR\cf3 )\
+library(\cf4 scales\cf3 )\
+library(\cf4 data.table\cf3 )\
+library(\cf4 fBasics\cf3 )\
+library(\cf4 forcats\cf3 )\
+library(\cf4 omu\cf3 )\
+library(\cf4 maptools\cf3 )\
+library(\cf4 phyloseq\cf3 )\
+library(\cf4 SpiecEasi\cf3 )\
+library(\cf5 "vegan"\cf3 )\
+library(\cf4 ade4\cf3 )\
+library(\cf5 "reshape2"\cf3 )\
+library(\cf4 dplyr\cf3 )	\
+\
+\
+\
+\
+\
+\cf2 #######################################################################################################################################\
+#########   MICROBIOME ANALYSIS     ########################################################################################################\
+################################################################################################################################################\
+\cf3 \
+\cf2 ## Load data\
+\cf4 file\cf3  = \cf5 "otu_table.biom"\cf3 \
+\cf4 map\cf3  = \cf5 "finalprognosisfmap.txt"\cf3   \
+\
+\cf2 # Load the abundace table and mapping table \
+\cf4 abundance.table\cf3  = import_biom(\cf4 file\cf3 , \cf4 taxaPrefix\cf3 =\cf6 F\cf3 )\
+\cf4 mapping.table\cf3 =sample_data(read.table(\cf4 map\cf3 , \cf4 header\cf3 =\cf6 T\cf3 , \cf4 sep\cf3 =\cf5 "\\t"\cf3 , \cf4 row.names\cf3 =\cf7 1\cf3 ))  \
+\cf2 #reload#\
+\cf3 \
+\
+\cf4 lung.physeq\cf3 =phyloseq(otu_table(\cf4 abundance.table\cf3 ),tax_table(\cf4 abundance.table\cf3 ), \cf4 mapping.table\cf3 )  \
+\cf2 #reload#\
+\cf3 \
+\
+\cf2 #Give a colnames to separate different taxonomic levels\
+\cf3 colnames(tax_table(\cf4 lung.physeq\cf3 ))=c(\cf5 "Domain"\cf3 , \cf5 "Phylum"\cf3 , \cf5 "Class"\cf3 , \cf5 "Order"\cf3 , \cf5 "Family"\cf3 , \cf5 "Genus"\cf3 , \cf5 "OTU"\cf3 )    \
+\
+\cf2 # Load the tree file (use the unannotated.tree)\
+\cf4 treefile\cf3  = \cf5 "97_otus.tree"\cf3  \
+\cf4 tree.obj\cf3  = import_qiime(\cf4 treefilename\cf3  = \cf4 treefile\cf3 ) \
+\
+\
+\cf2 # Now merge the three separate phyloseq objects into a single object\
+\cf4 otu.table\cf3  = merge_phyloseq(\cf4 lung.physeq\cf3 , \cf4 mapping.table\cf3 , \cf4 tree.obj\cf3 )  \
+\
+rownames(sample_data(\cf4 otu.table\cf3 ))  \
+colnames(sample_data(\cf4 otu.table\cf3 ))\
+\
+\cf2 # Remove taxa with 0 abundance\
+\cf4 otu.table\cf3  = subset_taxa(\cf4 otu.table\cf3 , rowSums(otu_table(\cf4 otu.table\cf3 )) != \cf7 0\cf3 )  \
+\
+\
+\cf2 ##If you want to nomalize OTU table before\
+## To normalize data you need to set a function\
+\cf4 normalizeSample\cf3  = \cf6 function\cf3 (\cf4 x\cf3 ) \cf4 x\cf3 /sum(\cf4 x\cf3 )\
+\
+\cf4 otu.relative.table\cf3  = transformSampleCounts(\cf4 otu.table\cf3 , \cf4 normalizeSample\cf3 )  \cf2 #reload#\
+\cf3 \
+\cf2 # Create phyllum and order tables (do it after normalization and out of the relative table)\
+\cf4 Phylum.rel.table\cf3  = tax_glom(\cf4 otu.relative.table\cf3 , \cf4 taxrank\cf3  = \cf5 "Phylum"\cf3 )\
+\cf4 Class.rel.table\cf3  = tax_glom(\cf4 otu.relative.table\cf3 , \cf4 taxrank\cf3  = \cf5 "Class"\cf3 )\
+\cf4 Order.rel.table\cf3  = tax_glom(\cf4 otu.relative.table\cf3 , \cf4 taxrank\cf3  = \cf5 "Order"\cf3 )\
+\cf4 Family.rel.table\cf3  = tax_glom(\cf4 otu.relative.table\cf3 , \cf4 taxrank\cf3  = \cf5 "Family"\cf3 )\
+\cf4 Genus.rel.table\cf3  = tax_glom(\cf4 otu.relative.table\cf3 , \cf4 taxrank\cf3  = \cf5 "Genus"\cf3 )\
+\cf4 OTU.rel.table\cf3  = tax_glom(\cf4 otu.relative.table\cf3 , \cf4 taxrank\cf3  = \cf5 "OTU"\cf3 )\
+\
+\
+\cf2 #create genus table for total counts\
+\cf4 Genus.table\cf3  = tax_glom(\cf4 otu.table\cf3 , \cf4 taxrank\cf3  = \cf5 "Genus"\cf3 )\
+\
+\cf2 ############### Subset Bronch lung cancer cohort (Paper_cohort_lns)\
+\cf3 \
+\cf4 Bronch.LC.cohort.Genus.rel.table\cf3  = subset_samples(\cf4 Genus.rel.table\cf3 , \cf4 Paper_cohort_lns\cf3   %\cf6 in\cf3 % c(\cf7 1\cf3 ))\
+\cf4 Bronch.LC.cohort.otu.relative.table\cf3  = subset_samples(\cf4 otu.relative.table\cf3 , \cf4 Paper_cohort_lns\cf3   %\cf6 in\cf3 % c(\cf7 1\cf3 ))\
+\
+\cf4 Bronch.LC.cohort.Genus.table\cf3  = subset_samples(\cf4 Genus.table\cf3 , \cf4 Paper_cohort_lns\cf3   %\cf6 in\cf3 % c(\cf7 1\cf3 ))\
+\cf4 Bronch.LC.cohort.OTU.table\cf3  = subset_samples(\cf4 otu.table\cf3 , \cf4 Paper_cohort_lns\cf3   %\cf6 in\cf3 % c(\cf7 1\cf3 ))\
+\
+\
+\
+\cf2 ## Beta diversity Bronch cohort\
+\cf3 \
+\cf4 Bronch.LC.cohort.Bray.dist\cf3  = distance(\cf4 Bronch.LC.cohort.otu.relative.table\cf3 , \cf5 "bray"\cf3 )\
+adonis(\cf4 Bronch.LC.cohort.Bray.dist\cf3  ~ sample_data(\cf4 Bronch.LC.cohort.otu.relative.table\cf3 )$\cf4 Simple_Path_lns\cf3 )\
+\
+\
+\cf2 ## Plot Beta diversity (Fig 1A)\
+#Create Distance Matrix\
+\cf4 vegdist\cf3    = vegdist(t(otu_table(\cf4 Bronch.LC.cohort.otu.relative.table\cf3 )), \cf4 method\cf3  = \cf5 "bray"\cf3 )\
+\
+\cf2 #Formulate principal component co-ordinates for PCOA plot, k as the choice of PCs\
+\cf4 CmdScale\cf3  <- cmdscale(\cf4 vegdist\cf3 , \cf4 k\cf3  =\cf7 10\cf3 )\
+\cf2 #calculated Sample variance for each PC\
+\cf4 vars\cf3  <- apply(\cf4 CmdScale\cf3 , \cf7 2\cf3 , \cf4 var\cf3 )\
+\cf2 #Create Variable with the Percent Variance\
+\cf4 percentVar\cf3  <- round(\cf7 100\cf3  * (\cf4 vars\cf3 /sum(\cf4 vars\cf3 )))\
+\
+\cf2 #Merge PC Data with MetaData\
+\cf3 require(\cf4 data.table\cf3 )\
+\cf4 newResults\cf3  <- merge(\cf4 x\cf3  = \cf4 CmdScale\cf3 , \cf4 y\cf3  = sample_data(\cf4 Bronch.LC.cohort.otu.relative.table\cf3 ), \cf4 by\cf3  = \cf5 "row.names"\cf3 , \cf4 all.x\cf3  = \cf6 TRUE\cf3 )\
+\cf2 #Rename Variables for PC1 and PC2\
+\cf3 colnames(\cf4 newResults\cf3 )[colnames(\cf4 newResults\cf3 )==\cf5 "V1"\cf3 ] <- \cf5 "PC1"\cf3 \
+colnames(\cf4 newResults\cf3 )[colnames(\cf4 newResults\cf3 )==\cf5 "V2"\cf3 ] <- \cf5 "PC2"\cf3 \
+colnames(\cf4 newResults\cf3 )[colnames(\cf4 newResults\cf3 )==\cf5 "Row.names"\cf3 ] <- \cf5 "name"\cf3 \
+\
+\cf2 #Calculate the Centroid Value\
+\cf4 centroids\cf3  <- aggregate(cbind(\cf4 PC1\cf3 ,\cf4 PC2\cf3 )~\cf4 Simple_Path_lns\cf3 ,\cf4 data\cf3 = \cf4 newResults\cf3 , \cf4 mean\cf3 )\
+\cf2 #Merge the Centroid Data into the PCOA Data\
+\cf4 newResults\cf3  <- merge(\cf4 newResults\cf3 ,\cf4 centroids\cf3 ,\cf4 by\cf3 =\cf5 "Simple_Path_lns"\cf3 ,\cf4 suffixes\cf3 =c(\cf5 ""\cf3 ,\cf5 ".centroid"\cf3 ))\
+\
+pdf(\cf5 "LC_Bronch_Cohort_Simple_Path_lns_BRAY.a1.pdf"\cf3 , \cf4 height\cf3  = \cf7 10\cf3 , \cf4 width\cf3  = \cf7 10\cf3 )\
+    ggplot(\cf4 newResults\cf3 , aes(\cf4 PC1\cf3 , \cf4 PC2\cf3 , \cf4 color\cf3 =\cf4 Simple_Path_lns\cf3 )) + \cf2 # Graph PC1 and PC2\
+\cf3     geom_point(\cf4 size\cf3 =\cf7 5\cf3 ) + \cf2 # Set the size of the points\
+\cf3     xlab(paste0(\cf5 "PC1: "\cf3 ,\cf4 percentVar\cf3 [\cf7 1\cf3 ],\cf5 "% variance"\cf3 )) + \cf2 #Label PC1\
+\cf3     ylab(paste0(\cf5 "PC2: "\cf3 ,\cf4 percentVar\cf3 [\cf7 2\cf3 ],\cf5 "% variance"\cf3 )) + \cf2 #Label PC2\
+\cf3     \cf2 #Set colors for each category, should be the same number of categories\
+\cf3     scale_color_manual(\cf4 values\cf3 =c(\cf5 "grey55"\cf3 , \cf5 "purple"\cf3 , \cf5 "dodgerblue"\cf3 , \cf5 "darkgreen"\cf3 )) + \
+    \cf2 #plot point and lines from centroid\
+\cf3     geom_point(\cf4 data\cf3 =\cf4 centroids\cf3 , aes(\cf4 x\cf3 =\cf4 PC1\cf3 , \cf4 y\cf3 =\cf4 PC2\cf3 , \cf4 color\cf3 =\cf4 Simple_Path_lns\cf3 ), \cf4 size\cf3 =\cf7 0\cf3 ) +\
+    geom_segment(aes(\cf4 x\cf3 =\cf4 PC1.centroid\cf3 , \cf4 y\cf3 =\cf4 PC2.centroid\cf3 , \cf4 xend\cf3 =\cf4 PC1\cf3 , \cf4 yend\cf3 =\cf4 PC2\cf3 , \cf4 color\cf3 =\cf4 Simple_Path_lns\cf3 ))+ \
+    \cf2 #If you want to identify specific samples use the code bellow\
+\cf3     \cf2 #geom_text_repel(aes(label=ifelse(newResults$name%in% c("COPD.0002.BAL.L.untouched","COPD.0030.BAL.L.untouched","COPD.0035.BAL.L.untouched") , as.character(newResults$name),'')),size=3,force=25) +\
+\cf3     \cf2 #labels centroids should be same number of categories\
+\cf3     geom_label_repel(\cf4 data\cf3  = \cf4 centroids\cf3 , aes(\cf4 x\cf3 =\cf4 PC1\cf3 , \cf4 y\cf3 =\cf4 PC2\cf3 , \cf4 label\cf3 =c(\cf5 "BKG"\cf3 , \cf5 "Buccal"\cf3 , \cf5 "NSCLC"\cf3 , \cf5 "Small.Cell"\cf3 )), \cf4 size\cf3 =\cf7 10\cf3 ) +\
+    \cf2 #Use the code bellow if you want to switch the X axis around\
+\cf3     \cf2 #scale_x_reverse() +\
+\cf3     theme(\cf4 panel.background\cf3  = element_blank(),\cf4 panel.border\cf3 =element_rect(\cf4 fill\cf3 =\cf6 NA\cf3 ),\cf4 panel.grid.major\cf3  = element_line(\cf4 linetype\cf3  = \cf5 "dashed"\cf3 , \cf4 size\cf3  = \cf7 0.5\cf3 , \cf4 colour\cf3  = \cf5 "grey80"\cf3 ),\cf4 panel.grid.minor\cf3  = element_blank(),\cf4 strip.background\cf3 =element_blank(),\cf4 axis.title\cf3 =element_text(\cf4 size\cf3 =\cf7 30\cf3 ,\cf4 face\cf3 =\cf5 "bold"\cf3 ),\cf4 axis.text.x\cf3 =element_text(\cf4 colour\cf3  = \cf5 "grey80"\cf3 , \cf4 size\cf3  = rel(\cf7 0.75\cf3 )),\cf4 axis.text.y\cf3 =element_text(\cf4 colour\cf3  = \cf5 "grey80"\cf3 , \cf4 size\cf3  = rel(\cf7 0.75\cf3 )),\cf4 axis.ticks\cf3 =element_blank(),\cf4 plot.margin\cf3 =unit(c(\cf7 1\cf3 ,\cf7 1\cf3 ,\cf7 1\cf3 ,\cf7 1\cf3 ),\cf5 "line"\cf3 ), \cf4 legend.position\cf3 =\cf5 "none"\cf3 )\
+dev.off()\
+\
+\
+\cf2 ##### Alpha diversity. \
+\cf4 Bronch.LC.cohort.Shannon_diversity\cf3  = diversity(otu_table(\cf4 Bronch.LC.cohort.otu.relative.table\cf3 ), \cf4 index\cf3  = \cf5 "shannon"\cf3 , \cf4 MARGIN\cf3  = \cf7 2\cf3 , \cf4 base\cf3  = exp(\cf7 1\cf3 ))\
+\
+\
+\cf2 ## TO PLOT IT (Supp Fig 3)\
+\cf3 pdf(\cf4 file\cf3 =\cf5 "Bronch.LC.diversity.a2.pdf"\cf3 , \cf4 width\cf3 =\cf7 6\cf3 , \cf4 height\cf3 =\cf7 6\cf3 )\
+boxplot(\cf4 Bronch.LC.cohort.Shannon_diversity\cf3  ~ sample_data(\cf4 Bronch.LC.cohort.otu.relative.table\cf3 )$\cf4 Simple_Path_lns\cf3 , \cf4 col\cf3 =c(\cf5 "grey55"\cf3 , \cf5 "purple"\cf3 , \cf5 "dodgerblue"\cf3 , \cf5 "darkgreen"\cf3 ), \cf4 outline\cf3 =\cf6 FALSE\cf3 )\
+stripchart(\cf4 Bronch.LC.cohort.Shannon_diversity\cf3  ~ sample_data(\cf4 Bronch.LC.cohort.otu.relative.table\cf3 )$\cf4 Simple_Path_lns\cf3 , \cf4 vertical\cf3 =\cf6 TRUE\cf3 , \cf4 add\cf3 =\cf6 TRUE\cf3 , \cf4 method\cf3 =\cf5 "jitter"\cf3 , \cf4 pch\cf3 =\cf7 20\cf3 , \cf4 col\cf3 =\cf5 "black"\cf3 )\
+dev.off()\
+\
+\
+\
+\cf2 #Stats\
+\cf3 kruskal.test(\cf4 Bronch.LC.cohort.Shannon_diversity\cf3  ~ sample_data(\cf4 Bronch.LC.cohort.otu.relative.table\cf3 )$\cf4 Simple_Path_lns\cf3 ) \
+\
+\
+\
+\
+\
+\
+\
+\
+\cf2 ######################################################################################################################\
+######################  Deseq Analysis #####################################\
+######################### Local vs. Advance ########################################################################\
+\cf3 \
+\cf4 Bronch.LC.cohort.otu.relative.table\cf3  = subset_samples(\cf4 otu.relative.table\cf3 , \cf4 Paper_cohort_lns\cf3   %\cf6 in\cf3 % c(\cf7 1\cf3 ))\
+\cf4 Airway.Brush.Cancer.Bronch.cohort.otu.relative.table\cf3  = subset_samples(\cf4 Bronch.LC.cohort.otu.relative.table\cf3 , \cf4 Sample_Type_code\cf3   %\cf6 in\cf3 % c(\cf7 4\cf3 ))\
+\cf4 NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table\cf3  = subset_samples(\cf4 Airway.Brush.Cancer.Bronch.cohort.otu.relative.table\cf3 , \cf4 NSCLC\cf3   %\cf6 in\cf3 % c(\cf7 1\cf3 ))\
+\cf4 Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table\cf3  = subset_samples(\cf4 NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table\cf3 , \cf4 Stage_Known\cf3   %\cf6 in\cf3 % c(\cf7 1\cf3 ))\
+\
+Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table\
+\
+\
+\
+\
+Bronch.LC.cohort.OTU.table = subset_samples(otu.table, Paper_cohort_lns  %in% c(1))\
+Airway.Brush.Cancer.Bronch.cohort.OTU.table = subset_samples(Bronch.LC.cohort.OTU.table, Sample_Type_code  %in% c(4))\
+NSCLC.Airway.Brush.Cancer.Bronch.cohort.OTU.table = subset_samples(Airway.Brush.Cancer.Bronch.cohort.OTU.table, NSCLC  %in% c(1))\
+Stage.Known.NSCLC.Airway.Brush.Bronch.LC.cohort.OTU.table = subset_samples(NSCLC.Airway.Brush.Cancer.Bronch.cohort.OTU.table, Stage_Known  %in% c(1))\
+\
+Stage.Known.NSCLC.Airway.Brush.Bronch.LC.cohort.OTU.table\
+\
+#########################################\
+#Set Theme for Figures\
+theme<-theme(panel.background = element_blank(),panel.border=element_rect(fill=NA),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),strip.background=element_blank(),axis.text.x=element_text(colour="black"),axis.text.y=element_text(colour="black"),axis.ticks=element_line(colour="black"),plot.margin=unit(c(1,1,1,1),"line"), legend.position="none")\
+\
+#-----------------------------------------\
+#-----------Setting Up the Phyloseq Object\
+#-----------------------------------------\
+#Choose Alpha/FDR (here you can go more or less conservative, choose one)\
+\
+alpha = 0.25\
+\
+\
+\
+\
+\
+#-----------------------------------------\
+#-------------Starting the DESEQ2 Analysis OTU level (to re run but pruning to most significant taxa, EVEN MORE)   \
+#-----------------------------------------\
+\
+#select most abundant taxa genera present in >10 reads in 5% of the samples (this approach brings in > 70% of the data in almost all samples)\
+Stage.Known.NSCLC.Airway.Brush.Bronch.LC.cohort.OTU.table.wh1 = genefilter_sample(Stage.Known.NSCLC.Airway.Brush.Bronch.LC.cohort.OTU.table, filterfun_sample(function(x) x > 10), A = 0.05 * nsamples(Stage.Known.NSCLC.Airway.Brush.Bronch.LC.cohort.OTU.table))\
+Stage.Known.NSCLC.Airway.Brush.Bronch.LC.cohort.OTU.table1B = prune_taxa(Stage.Known.NSCLC.Airway.Brush.Bronch.LC.cohort.OTU.table.wh1, Stage.Known.NSCLC.Airway.Brush.Bronch.LC.cohort.OTU.table)\
+\
+\
+#Pruned OTU table =  Stage.Known.NSCLC.Airway.Brush.Bronch.LC.cohort.OTU.table1B\
+##Unpruned Relative abundance Table =  Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table\
+#condition\
+sample_data(Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table)$Advanced_Stage_label # Advance Local\
+#Subset rel abundance table\
+Advance.Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table = subset_samples(Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table, Advanced_Stage_label  %in% c("Advance"))\
+Local.Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table = subset_samples(Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table, Advanced_Stage_label  %in% c("Local"))\
+\
+\
+\
+#Convert Phyloseq Object to DESEq, correncting for any potential confounders and \
+sample_data(Stage.Known.NSCLC.Airway.Brush.Bronch.LC.cohort.OTU.table1B)$Advanced_Stage_label\
+#chosing the comparison Variable: Sample_Description_s_s_Study\
+diagdds <- phyloseq_to_deseq2(Stage.Known.NSCLC.Airway.Brush.Bronch.LC.cohort.OTU.table1B, ~ Advanced_Stage_label)\
+\
+#Calculate geometric means prior to estimate size factor\
+gm_mean = function(x, na.rm=TRUE)\{ exp(sum(log(x[x > 0]), na.rm=na.rm) / length(x))\}\
+geoMeans = apply(counts(diagdds), 1, gm_mean)\
+\
+# Estimate Size, Disperssion and Variance\
+diagdds = estimateSizeFactors(diagdds, geoMeans = geoMeans)\
+diagdds = estimateDispersions(diagdds)\
+\
+#Optional calculate the Variance\
+#diagvst = getVarianceStabilizedData(diagdds)\
+\
+#Drop rows with no data in your comparison variable\
+diagdds$Advanced_Stage_label <- droplevels(diagdds$Advanced_Stage_label)\
+\
+#Choose which is the 'control' in your comparison variable, in this case, within the category Sample_Description_s_s_Study my control is labeled as "Smoker.Control.BAL"\
+diagdds$Advanced_Stage_label <- relevel(diagdds$Advanced_Stage_label, ref ="Local")\
+\
+#Run the differential Analysis\
+diagdds<- DESeq(diagdds)\
+\
+#Output the result from DESEQ into a table\
+res <- results(diagdds)\
+\
+# Reorder Results based on FDR\
+res = res[order(res$padj, na.last = NA), ]\
+\
+#Create list of top 50 Significant Genes\
+#select_genes = rownames(res[res$padj < 0.2 & !is.na(res$padj), ])[1:50]\
+\
+#Normalize Data\
+#One Method is VarianceStabilizing\
+#vd <- varianceStabilizingTransformation(diagdds, blind=TRUE, fitType="local")\
+#Another Method is Log Transformation\
+#exp <- rlog(diagdds, fitType="local")\
+\
+\
+#=========================================================\
+//////////////////////TABLES/////////////////////////////\
+#=========================================================\
+#Get Taxa Names from Phyloseq Object\
+res = cbind(as(res, "data.frame"), as(tax_table(Stage.Known.NSCLC.Airway.Brush.Bronch.LC.cohort.OTU.table1B)[rownames(res), ], "matrix"))\
+\
+#Replace OTU with Taxa\
+res$row2 <- paste(res$Domain,res$Phylum,res$Class,res$Order,res$Family,res$Genus, res$OTU, rownames(res))\
+#Replace Spaces with .\
+res$row2 <- gsub('\\\\s+', '.', res$row2)\
+\
+#convert counts to a data.frame for use in CyberSort\
+#cyber <- as.data.frame(assay(exp))\
+\
+#Convert Resuts table into a data.frame\
+res <- as.data.frame(res)\
+\
+\
+#Set Names of Results Table as Taxa Names\
+res <- setNames(cbind(rownames(res), res, row.names = NULL), c("Gene.symbol","baseMean", "logFC", "lfcSE", "stat", "pvalue", "adj.P.Val","Domain","Phylum","Class","Order","Family","Genus","OTU","row2"))\
+res$OTU <- res$Gene.symbol\
+\
+##add the OTU nunmber to the label\
+#Replace OTU with Taxa\
+res$row3 <- paste(res$Domain,res$Phylum,res$Class,res$Order,res$Family,res$Genus, res$OTU)\
+#Replace Spaces with .\
+res$row3 <- gsub('\\\\s+', '.', res$row3)\
+\
+#rename\
+#res$Gene.symbol <- res$row3 #if you don't want species\
+res$Gene.symbol <- res$row2 #if you want to get specie trail\
+\
+\
+\
+######get abundance data - mean relative - use otu.relative.table - THIS CODE ADDS REL ABUNDANCE AS THE DOT SIZE #### Need to redo this to get the mean RA for each side\
+\{\
+#decide what otu to save \
+otu.to.save <-as.character(res$OTU)\
+\
+#Relative tables for each condition to use to obtain relative abundance\
+Advance.Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table\
+Local.Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table \
+\
+#from relative table we should get the mean across the row of the otu table\
+Advance.Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table.df <- data.frame(otu_table(Advance.Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table))\
+Advance.Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table.df.meanRA <- rowMeans(Advance.Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table.df)\
+\
+Local.Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table.df <- data.frame(otu_table(Local.Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table))\
+Local.Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table.df.meanRA <- rowMeans(Local.Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table.df)\
+\
+\
+#need to subset AND reorder just the otus that we have \
+Advance.Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table.df.meanRA.save <- Advance.Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table.df.meanRA[otu.to.save]\
+\
+Local.Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table.df.meanRA.save <- Local.Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table.df.meanRA[otu.to.save]\
+\
+#add the abundnace data for each condition to the res dataframe\
+res$abundance.advanced <- Advance.Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table.df.meanRA.save\
+res$abundance.local <- Local.Stage.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.otu.relative.table.df.meanRA.save\
+\
+\}\
+\
+\
+#Keep only the variables you need for pathway analysis\
+res.PA <- res[,c("Gene.symbol","logFC", "pvalue", "adj.P.Val", "abundance.advanced","abundance.local")]\
+res.IPA <- res[,c("Gene.symbol","logFC","pvalue","adj.P.Val", "abundance.advanced", "abundance.local")]\
+\
+#Write Tables to for Suppl Tables for 16s ################\
+#For Pathway Analysis\
+write.table(res.PA,file=  "closeAdvLoc.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.rel.PA2.txt", sep="\\t", col.names = NA, row.names = TRUE)\
+#For IPA\
+write.table(res.IPA,file="closeAdvLoc.Known.NSCLC.Airway.Brush.Cancer.Bronch.cohort.rel.IPA2.txt", sep="\\t", col.names = NA, row.names = TRUE, quote=FALSE)\
+#For CyberSort\
+write.table(cyber,file="OTU.Taxa_BAL_COPD_vs_SmNV_Cybersort.a2.txt", sep="\\t", col.names = NA, row.names = TRUE, quote=TRUE)\
+\
+\
+#=========================================================\
+////////////////////VOLCANO PLOT///////////////////////\
+#=========================================================\
+\
+#Compute FDR in a log scale\
+res$sig <- -log10(res$adj.P.Val)\
+\
+#See How many are now infinte\
+sum(is.infinite(res$sig))\
+\
+#Convert any Infinite values to a maximum value for adjusted pvalue for the graph (here I choose 350)\
+res[is.infinite(res$sig),"sig"] <- 350 ### error here  object 'res.bal' not found\
+\
+# Create variable for color gradient of the dots in the Volcano Plot\
+cols <- densCols(res$logFC, res$sig)\
+cols[res$pvalue ==0] <- "purple"\
+cols[res$logFC > 1 & res$adj.P.Val < alpha ] <- "magenta3"\
+cols[res$logFC < -1 & res$adj.P.Val < alpha ] <- "slateblue1"\
+\
+# Create a Variable for the size of the dots in the Volcano Plot\
+res$pch <- 19\
+res$pch[res$pvalue ==0] <- 6\
+\
+###### to generate Suppl Fig 4-7###############\
+}
