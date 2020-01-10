@@ -39,18 +39,13 @@ library(\cf4 MetaboSignal\cf2 )\
 \cf4 theme\cf2 <-theme(\cf4 panel.background\cf2  = element_blank(),\cf4 panel.border\cf2 =element_rect(\cf4 fill\cf2 =\cf5 NA\cf2 ),\cf4 panel.grid.major\cf2  = element_blank(),\cf4 panel.grid.minor\cf2  = element_blank(),\cf4 strip.background\cf2 =element_blank(),\cf4 axis.text.x\cf2 =element_text(\cf4 colour\cf2 =\cf6 "black"\cf2 ),\cf4 axis.text.y\cf2 =element_text(\cf4 colour\cf2 =\cf6 "black"\cf2 ),\cf4 axis.ticks\cf2 =element_line(\cf4 colour\cf2 =\cf6 "black"\cf2 ),\cf4 plot.margin\cf2 =unit(c(\cf7 1\cf2 ,\cf7 1\cf2 ,\cf7 1\cf2 ,\cf7 1\cf2 ),\cf6 "line"\cf2 ), \cf4 legend.position\cf2 =\cf6 "none"\cf2 )\
 \cf4 theme2\cf2 <-theme(\cf4 panel.background\cf2  = element_blank(),\cf4 panel.border\cf2 =element_rect(\cf4 fill\cf2 =\cf5 NA\cf2 ),\cf4 panel.grid.major\cf2  = element_blank(),\cf4 panel.grid.minor\cf2  = element_blank(),\cf4 strip.background\cf2 =element_blank(),\cf4 axis.title\cf2 =element_text(\cf4 size\cf2 =\cf7 30\cf2 ,\cf4 face\cf2 =\cf6 "bold"\cf2 ),\cf4 axis.text.x\cf2 =element_blank(),\cf4 axis.text.y\cf2 =element_blank(),\cf4 axis.ticks\cf2 =element_blank(),\cf4 plot.margin\cf2 =unit(c(\cf7 1\cf2 ,\cf7 1\cf2 ,\cf7 1\cf2 ,\cf7 1\cf2 ),\cf6 "line"\cf2 ), \cf4 legend.position\cf2 =\cf6 "none"\cf2 )\
 \
-load(\cf4 file\cf2 =\cf6 "RNA.seq.HUMAN7.RData"\cf2 )\
+load(\cf4 file\cf2 =\cf6 "RNA.seq.HUMAN8.RData"\cf2 )\
 \
-\cf3 #load(file="RNA.seq.HUMAN.RData")\
-\cf2 save.image(\cf4 file\cf2 =\cf6 "RNA.seq.HUMAN7.RData"\cf2 )\
-\cf3 #load(file="RNA.seq.HUMAN8.RData")\
-\cf2 load(\cf4 file\cf2 =\cf6 "RNA.seq.HUMAN4.RData"\cf2 )\
 \
 \cf3 #Choose Alpha/FDR\
 \cf4 alpha\cf2  = \cf7 0.01\cf2 \
 \
 \cf3 #Load Meta Data\
-\cf4 coldata\cf2  <- read.delim2(\cf6 "Map.A6.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 )\
 \cf4 coldata\cf2  <- read.delim2(\cf6 "Map.A7.txt"\cf2 , \cf4 sep\cf2 =\cf6 "\\t"\cf2 )\
 \
 \cf3 #Keep Only MetaData of RNASeq Samples\
